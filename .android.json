@@ -1,1 +1,1 @@
-{"layout": "internal", "orientation": "landscape", "package": "com.bagels.vs.cats", "include_pil": false, "name": "Bagels vs. Cats", "icon_name": "Bagels vs. Cats", "version": "1.5.1", "permissions": ["INTERNET", "VIBRATE"], "include_sqlite": false, "numeric_version": "10051"}
+{"layout": "internal", "orientation": "landscape", "package": "com.bagels.vs.cats", "include_pil": false, "name": "Bagels vs. Cats", "icon_name": "Bagels vs. Cats", "version": "1.5.2", "permissions": ["INTERNET", "VIBRATE"], "include_sqlite": false, "numeric_version": "10052"}

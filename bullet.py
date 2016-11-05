@@ -124,3 +124,29 @@ class Explosion(pygame.sprite.Sprite):
 		self.remove()
 		pass
 		#print("weegle")
+
+class Trail(pygame.sprite.Sprite):
+
+	trailCat = None
+	countdown = 100
+
+	def __init__(self, x, y, catNumber, cat):
+		pygame.sprite.Sprite.__init__(self)
+		self.image = pygame.Surface([900,36])
+		self.image.fill((255,201,41))
+		self.rect = self.image.get_rect()
+		self.rect.x = x + 12
+		self.rect.y = y + 6
+		self.trailNumber = catNumber
+		self.trailCat = cat
+
+	def update(self):
+		print(self.rect.x,self.trailCat.rect.x)
+		if self.rect.x >= self.trailCat.rect.x + 12:
+			self.rect.x = self.trailCat.rect.x + 12
+
+		if self.trailCat.health <= 0:
+			self.countdown -= 1
+			if self.countdown <= 1:
+				self.kill()
+				self.remove()

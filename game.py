@@ -13,6 +13,7 @@ from bagel import Bagel
 from bagel import emptyBagel
 from cat import Cat
 from bullet import Bullet
+from bullet import Trail
 from particle import Particle
 
 try:
@@ -43,7 +44,7 @@ class Game(object):
 	title_screen = pygame.image.load(os.path.join("images", "title_screen.png")).convert_alpha()
 	pressed_play_button = pygame.image.load(os.path.join("images", "pressed_play_button.png")).convert_alpha()
 	version_font = pygame.font.Font("visitor1.ttf",30)
-	version = version_font.render("Alpha 1.5.1",False,(0,0,0))
+	version = version_font.render("Alpha 1.5.2",False,(0,0,0))
 	gameOver = False
 
 	# Pause
@@ -205,6 +206,7 @@ class Game(object):
 	baby_cat = pygame.image.load(os.path.join("images", "baby_cat.png")).convert_alpha()
 	ninja_cat = pygame.image.load(os.path.join("images", "ninja_cat.png")).convert_alpha()
 	pizza_cat = pygame.image.load(os.path.join("images", "pizza_cat.png")).convert_alpha()
+	fondue_cat = pygame.image.load(os.path.join("images", "fondue_cat.png")).convert_alpha()
 	cat_eating = pygame.image.load(os.path.join("images", "cat_eating.png")).convert_alpha()
 	taco_cat_eating = pygame.image.load(os.path.join("images", "taco_cat_eating.png")).convert_alpha()
 	melon_cat_eating = pygame.image.load(os.path.join("images", "melon_cat_eating.png")).convert_alpha()
@@ -216,6 +218,7 @@ class Game(object):
 	melon_cat_throw2 = pygame.image.load(os.path.join("images", "melon_cat_throw2.png")).convert_alpha()
 	pizza_cat_ns = pygame.image.load(os.path.join("images", "pizza_cat_ns.png")).convert_alpha()
 	pizza_cat_eating_ns = pygame.image.load(os.path.join("images", "pizza_cat_eating_ns.png")).convert_alpha()
+	fondue_cat_eating = pygame.image.load(os.path.join("images", "fondue_cat_eating.png")).convert_alpha()
 	bagel_shot = pygame.image.load(os.path.join("images", "bagel_shot.png")).convert_alpha()
 	poppy_shot = pygame.image.load(os.path.join("images", "poppy_shot.png")).convert_alpha()
 	wizard_shot = pygame.image.load(os.path.join("images", "wizard_shot.png")).convert_alpha()
@@ -262,6 +265,7 @@ class Game(object):
 	cageList = pygame.sprite.Group()
 	dogList = pygame.sprite.Group()
 	explosionList = pygame.sprite.Group()
+	trailList = pygame.sprite.Group()
 
 	# hasBagel
 	page = 1
@@ -293,7 +297,7 @@ class Game(object):
 	wheatCapacity = 425
 	poppyCapacity = 600
 	sesameCapacity = 600
-	wizardCapacity = 375
+	wizardCapacity = 1#375
 	cowCapacity = 600
 	everyCapacity = 425
 	craisCapacity = 600
@@ -308,8 +312,8 @@ class Game(object):
 	wave = 1
 	catNumber = 1
 	preCatList = []
-	instances = 1
-	catTypes = ["cat","cat","cat","cat","cat","cat"]
+	instances = 25
+	catTypes = ["fondue_cat","cat"]#["cat","cat","cat","cat","cat","cat"]
 	ninja_cat_rope_list = []
 	rope_list = []
 	extinction = [0] # I hate this variable...
@@ -320,7 +324,7 @@ class Game(object):
 	waveBar = 0
 
 	# Wheat
-	wheatCount = 5
+	wheatCount = 500
 	plainCost = 1
 	wheatCost = 2
 	poppyCost = 4
@@ -827,6 +831,7 @@ class Game(object):
 		for i in self.catList:
 			if i.caged or i.catType == "baby_cat":
 				i.draw(screen)
+		self.trailList.draw(screen)
 		self.bagelList.draw(screen)
 		self.bulletList.draw(screen)
 		self.dogList.draw(screen)
@@ -924,6 +929,7 @@ class Game(object):
 		self.catList.update(paused)
 		self.ghostBagelList.update()
 		self.explosionList.update()
+		self.trailList.update()
 
 
 		for i in self.cageList:
@@ -969,7 +975,7 @@ class Game(object):
 							i.zzzAlpha = 255
 
 		for i in self.catList:
-			if i.catType == "cat" or i.catType == "baby_cat" or i.catType == "ninja_cat":
+			if i.catType == "cat" or i.catType == "baby_cat" or i.catType == "ninja_cat" or i.catType == "fondue_cat":
 				i.eatEmCat(self.bagelList,self.emptyBList)
 			elif i.catType == "taco_cat":
 				i.eatEmTacoCat(self.bagelList,self.emptyBList,self.ghostBagelList,self.allSprites,self.plain_bagel,self.poppy_bagel,self.wizard_bagel1,self.wizard_bagel2,self.wizard_bagel3,self.everything_bagel,self.crais_bagel)
@@ -1050,7 +1056,7 @@ class Game(object):
 		if self.clicked == True:
 			pos = pygame.mouse.get_pos()
 			for i in self.emptyBList:
-				if i.rect.collidepoint(pos[0],pos[1]) and not pygame.sprite.spritecollide(i, self.emptyCowBList, False) and not pygame.sprite.spritecollide(i, self.catList, False) and paused == False:
+				if i.rect.collidepoint(pos[0],pos[1]) and not pygame.sprite.spritecollide(i, self.emptyCowBList, False) and not pygame.sprite.spritecollide(i, self.catList, False) and not pygame.sprite.spritecollide(i, self.trailList, False) and paused == False:
 					#print(i.id)
 					particle_list = self.create_particles(particle_list, (i.rect.x + 33, i.rect.y + 33), (117,66,0), 40, 25, None)
 					if android:
@@ -1273,6 +1279,20 @@ class Game(object):
 						cat.add(self.catList)
 						cat.add(self.bagelCatList)
 						cat.add(self.allSprites)
+					elif catType == "fondue_cat":
+						position = random.randrange(11,394,66)
+						cat = Cat("fondue_cat",20,1100,position,self.fondue_cat,self.fondue_cat_eating,self.catNumber)
+						if self.exclaim == True:
+							self.drawDanger = position
+							self.exclaim = False
+						cat.storedY = position
+						cat.add(self.catList)
+						cat.add(self.bagelCatList)
+						cat.add(self.allSprites)
+						# Specific to fondue cat
+						trail = Trail(1100,position,self.catNumber,cat)
+						trail.add(self.trailList)
+						trail.add(self.allSprites)
 					self.catNumber += 1
 				if self.spawnTime >= 900:
 					self.spawnTime = 0
@@ -1294,6 +1314,9 @@ class Game(object):
 					self.catTypes.append("baby_cat")
 				if self.wave >= 4:
 					self.catTypes.append("taco_cat")
+					self.catTypes.append("fondue_cat")
+					self.catTypes.append("fondue_cat")
+					self.catTypes.append("melon_cat")
 					self.catTypes.append("melon_cat")
 				if self.wave >= 5:
 					self.catTypes.append("weenie_cat")
@@ -1558,6 +1581,17 @@ class Game(object):
 						i.remove()
 						i.kill()
 
+		# Throwin' in the cat speed up from fondue
+		for q in self.catList:
+			if pygame.sprite.spritecollide(q, self.trailList, False) and q.catType != "fondue_cat" and paused == False:
+				for w in self.trailList:
+					if pygame.sprite.collide_rect(w, q):
+						q.speed = 2
+
+			elif not pygame.sprite.spritecollide(q, self.trailList, False) and q.catType != "fondue_cat" and paused == False:
+				for w in self.trailList:
+					if not pygame.sprite.collide_rect(w, q):
+						q.speed = 1
 
 	def createHealthBars(self):
 		for i in self.catList:
@@ -1570,7 +1604,7 @@ class Game(object):
 				shield = round(40 * shieldPercent)
 			# Not every teacher is as good as Gino
 			#BringGinoToIB
-			if i.catType == "cat" or i.catType == "taco_cat" or i.catType == "melon_cat" or i.catType == "ninja_cat":
+			if i.catType == "cat" or i.catType == "taco_cat" or i.catType == "melon_cat" or i.catType == "ninja_cat" or i.catType == "fondue_cat":
 				pygame.draw.rect(screen,(255,0,0),(i.rect.x + 73,i.rect.y + 46,3,-40))
 				pygame.draw.rect(screen,(0,0,255),(i.rect.x + 73,i.rect.y + 46,3, -health))
 			elif i.catType == "weenie_cat":
@@ -1640,6 +1674,7 @@ class Game(object):
 		self.catBulletList.empty()
 		self.cageList.empty()
 		self.dogList.empty()
+		self.trailList.empty()
 		particle_list = []
 		self.allSprites.empty()
 		self.bagelCatList.empty()
