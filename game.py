@@ -297,7 +297,7 @@ class Game(object):
 	wheatCapacity = 425
 	poppyCapacity = 600
 	sesameCapacity = 600
-	wizardCapacity = 1#375
+	wizardCapacity = 375
 	cowCapacity = 600
 	everyCapacity = 425
 	craisCapacity = 600
@@ -312,8 +312,8 @@ class Game(object):
 	wave = 1
 	catNumber = 1
 	preCatList = []
-	instances = 25
-	catTypes = ["fondue_cat","cat"]#["cat","cat","cat","cat","cat","cat"]
+	instances = 1
+	catTypes = ["cat"]#["cat","cat","cat","cat","cat","cat"]
 	ninja_cat_rope_list = []
 	rope_list = []
 	extinction = [0] # I hate this variable...
@@ -324,7 +324,7 @@ class Game(object):
 	waveBar = 0
 
 	# Wheat
-	wheatCount = 500
+	wheatCount = 5
 	plainCost = 1
 	wheatCost = 2
 	poppyCost = 4
@@ -1322,16 +1322,20 @@ class Game(object):
 					self.catTypes.append("weenie_cat")
 					self.catTypes.append("weenie_cat")
 					self.catTypes.append("melon_cat")
+					self.catTypes.append("fondue_cat")
 					self.catTypes.append("ninja_cat")
 				if self.wave >= 7:
 					self.catTypes.append("pizza_cat")
+					self.catTypes.append("fondue_cat")
 				if self.wave >= 8:
 					self.catTypes.append("pizza_cat")
 					self.catTypes.append("pizza_cat")
+					self.catTypes.append("fondue_cat")
 				if self.wave >= 10:
 					self.catTypes.append("pizza_cat")
 					self.catTypes.append("pizza_cat")
 					self.catTypes.append("pizza_cat")
+					self.catTypes.append("fondue_cat")
 
 	def spawnBagels(self):
 		global particle_list
