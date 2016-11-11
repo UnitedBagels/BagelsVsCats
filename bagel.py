@@ -13,6 +13,7 @@ class Bagel(pygame.sprite.Sprite):
 	health = None
 	totalHealth = None
 	paused = False
+	bagelSelected = False
 
 	# Bullet Physics Stuff
 	fired = False

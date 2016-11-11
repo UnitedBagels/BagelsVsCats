@@ -94,6 +94,7 @@ class Game(object):
 	locked = pygame.image.load(os.path.join("images", "locked.png")).convert_alpha()
 	wheat = pygame.image.load(os.path.join("images", "wheat.png")).convert_alpha()
 	tile = pygame.image.load(os.path.join("images", "tile.png")).convert_alpha()
+	selector = pygame.image.load(os.path.join("images", "selector.png")).convert_alpha()
 	blank_tile = pygame.image.load(os.path.join("images", "blank_tile.png")).convert_alpha()
 	blank_tile_dirt = pygame.image.load(os.path.join("images", "blank_tile_dirt.png")).convert_alpha()
 	cream_cheese_tile = pygame.image.load(os.path.join("images", "cream_cheese_tile.png")).convert_alpha()
@@ -313,7 +314,7 @@ class Game(object):
 	catNumber = 1
 	preCatList = []
 	instances = 1
-	catTypes = ["cat"]#["cat","cat","cat","cat","cat","cat"]
+	catTypes = ["cat","cat","cat","cat","cat","cat"]
 	ninja_cat_rope_list = []
 	rope_list = []
 	extinction = [0] # I hate this variable...
@@ -351,14 +352,161 @@ class Game(object):
 	# You're a cow!
 	milk = 0
 
+	# Computer selecting
+	selecting = False
+
 	def eventProcess(self):
 		global particle_list, paused, pos
 		for event in pygame.event.get():
 			if (event.type == pygame.QUIT) or event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
 				pygame.quit()
 				sys.exit()
-			if event.type == pygame.KEYDOWN and event.key == pygame.K_p and self.gameOver == False and self.titleOn == False:
-				paused = not paused
+				
+			if event.type == pygame.KEYDOWN and self.gameOver == False and self.titleOn == False:
+				pos = pygame.mouse.get_pos()
+				if event.key == pygame.K_p:
+					paused = not paused
+				if event.key == pygame.K_UP or event.key == pygame.K_w:
+					if not self.selecting:
+						self.selecting = True
+					pos = pygame.mouse.get_pos()
+					pygame.mouse.set_pos([pos[0],pos[1] - 66])
+				if event.key == pygame.K_DOWN or event.key == pygame.K_s:
+					if not self.selecting:
+						self.selecting = True
+					pos = pygame.mouse.get_pos()
+					pygame.mouse.set_pos([pos[0],pos[1] + 66])
+				if event.key == pygame.K_LEFT or event.key == pygame.K_a:
+					if not self.selecting:
+						self.selecting = True
+					pos = pygame.mouse.get_pos(9)
+					pygame.mouse.set_pos([pos[0] - 66,pos[1]])
+				if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+					if not self.selecting:
+						self.selecting = True
+					pos = pygame.mouse.get_pos()
+					pygame.mouse.set_pos([pos[0] + 66,pos[1]])
+				if event.key == pygame.K_u:
+					self.selecting = False
+					pygame.mouse.set_visible(True)
+				if event.key == pygame.K_TAB:
+					if self.page == 1:
+						self.page += 1
+					elif self.page == 2:
+						self.page -= 1
+					self.hasBagel = "null"
+				if event.key == pygame.K_SPACE:
+					for i in self.wheatList:
+						bullet_vec_x = i.rect.x - 145
+						bullet_vec_y = i.rect.y - 405
+						vec_length = math.sqrt(bullet_vec_x ** 2 + bullet_vec_y ** 2)
+						bullet_vec_x = (bullet_vec_x / vec_length) * 13
+						bullet_vec_y = (bullet_vec_y / vec_length) * 13
+						self.wheatMoveList.append([bullet_vec_x,bullet_vec_y,i.rect.x,i.rect.y])
+						i.kill()
+						i.remove()
+						self.wheatCount += 1
+				if event.key == pygame.K_SPACE:
+					for i in self.wheatList:
+						bullet_vec_x = i.rect.x - 145
+						bullet_vec_y = i.rect.y - 405
+						vec_length = math.sqrt(bullet_vec_x ** 2 + bullet_vec_y ** 2)
+						bullet_vec_x = (bullet_vec_x / vec_length) * 13
+						bullet_vec_y = (bullet_vec_y / vec_length) * 13
+						self.wheatMoveList.append([bullet_vec_x,bullet_vec_y,i.rect.x,i.rect.y])
+						i.kill()
+						i.remove()
+						self.wheatCount += 1
+				if event.key == pygame.K_BACKQUOTE:
+					for i in self.bagelList:
+						if i.rect.collidepoint(pos[0],pos[1]):
+							if i.bagelType != "cow":   # Fix
+								if i.bagelType == "wheat" or i.bagelType == "crais":
+									particle_list = self.create_particles(particle_list, (i.rect.x + 25,i.rect.y + 21), (156,111,40), 40, 25, None)
+								elif i.bagelType == "multi":
+									particle_list = self.create_particles(particle_list, (i.rect.x + 25,i.rect.y + 21), (172,102,45), 40, 25, None)
+								elif i.bagelType == "wizard":
+									particle_list = self.create_particles(particle_list, (i.rect.x + 25,i.rect.y + 21), (229,218,165), 40, 36, None)
+								else:
+									particle_list = self.create_particles(particle_list, (i.rect.x + 25,i.rect.y + 21), (229,218,165), 40, 25, None)
+							else:
+								particle_list = self.create_particles(particle_list, (i.rect.x + 60,i.rect.y + 33), (229,218,165), 40, 25, None)
+							if android:
+								android.vibrate(0.05)
+							i.health = 0
+							if self.particleSetting == False:
+								self.fork.play()
+							self.hasBagel = "null"
+				if event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
+					for i in self.bagelList:
+						if i.bagelType == "cow" and i.sleepTimer > 0 and i.milkLeft > 0 and self.milk < 40:
+							self.milk += 1
+							i.milkLeft -= 1
+
+				# Functions for selecting
+
+				if self.selecting == True:
+					pos = pygame.mouse.get_pos()
+					for i in self.emptyBList:
+						if i.rect.collidepoint(pos[0],pos[1]):
+							print("please")
+							if self.page == 1:
+								if event.key == pygame.K_1 and self.wheatRecharge == False and self.hasBagel != "wheat" and (self.wheatCount >= self.wheatCost):
+									self.hasBagel = "wheat"
+									self.clicked = True
+								if event.key == pygame.K_2 and self.plainRecharge == False and self.hasBagel != "plain" and (self.wheatCount >= self.plainCost):
+									self.hasBagel = "plain"
+									self.clicked = True
+								if event.key == pygame.K_3 and self.poppyRecharge == False and self.hasBagel != "poppy" and (self.wheatCount >= self.poppyCost):
+									self.hasBagel = "poppy"
+									self.clicked = True
+								if event.key == pygame.K_4 and self.sesameRecharge == False and self.hasBagel != "sesame" and (self.wheatCount >= self.sesameCost):
+									self.hasBagel = "sesame"
+									self.clicked = True
+								if event.key == pygame.K_5 and self.wizardRecharge == False and self.hasBagel != "wizard" and (self.wheatCount >= self.wizardCost):
+									self.hasBagel = "wizard"
+									self.clicked = True
+							elif self.page == 2:
+								if event.key == pygame.K_1 and self.cowRecharge == False and self.hasBagel != "cow" and (self.wheatCount >= self.cowCost):
+									self.hasBagel = "cow"
+									self.clicked = True
+								if event.key == pygame.K_2 and self.everyRecharge == False and self.hasBagel != "everything" and (self.wheatCount >= self.everyCost):
+									self.hasBagel = "everything"
+									self.clicked = True
+								if event.key == pygame.K_3 and self.craisRecharge == False and self.hasBagel != "crais" and (self.wheatCount >= self.craisCost):
+									self.hasBagel = "crais"
+									self.clicked = True
+								if event.key == pygame.K_4 and self.multiRecharge == False and self.hasBagel != "multi" and (self.wheatCount >= self.multiCost):
+									self.hasBagel = "multi"
+									self.clicked = True
+								if event.key == pygame.K_5 and self.flagelRecharge == False and self.hasBagel != "flagel" and (self.wheatCount >= self.flagelCost):
+									self.hasBagel = "flagel"
+									self.clicked = True
+
+					for i in self.bagelList:
+						if i.rect.collidepoint(pos[0],pos[1]) and i.bagelType == "wizard" and i.level < 3:
+							if event.key == pygame.K_5 and self.wizardRecharge == False and self.hasBagel != "wizard" and (self.wheatCount >= self.wizardCost):
+								self.wheatCount -= self.wizardCost
+								i.level += 1
+								i.levelUp = True
+								particle_list = self.create_particles(particle_list, (i.rect.x + 30,i.rect.y), (232,221,29), 40, 57, "exp")
+								if i.level == 2:
+									i.image = self.wizard_bagel2
+								elif i.level == 3:
+									i.image = self.wizard_bagel3
+								self.wizardRecharge = True
+								self.hasBagel = "null"
+							elif i.rect.collidepoint(pos[0],pos[1]) and (i.bagelType != "wizard" or i.level >= 3):
+								self.clicked = False
+						if i.rect.collidepoint(pos[0],pos[1]):
+							if event.key == pygame.K_6:
+								if i.bagelType != "cow" and self.milk >= 20: # probably not necessary but hey
+									i.cheeseItUp = 400
+									self.milk -= 20
+									self.hasBagel = "null" 
+
+			#if event.type == pygame.MOUSEMOTION:
+
 			if event.type == pygame.MOUSEBUTTONDOWN and (paused == False and self.gameOver == False):
 				pos = pygame.mouse.get_pos()
 				#print(pos[0],pos[1])
@@ -630,6 +778,8 @@ class Game(object):
 			for i in self.bagelList:
 				if i.cheeseItUp > 0:
 					screen.blit(self.cream_cheese_tile,(i.storedx,i.storedy))
+			if self.selecting == True:
+				pygame.mouse.set_visible(False)
 			if self.displayWave == 0:
 				screen.blit(wave_count,(665,10))
 
@@ -811,6 +961,13 @@ class Game(object):
 			if self.hasBagel == "creamcheese":
 				screen.blit(self.cream_cheese_selected,(140,400))
 
+			for i in self.emptyBList: # A bit out of place but that's OK
+				if i.bagelSelected == True:
+					screen.blit(self.selector,(i.rect.x,i.rect.y))
+			for i in self.bagelList:
+				if i.bagelSelected == True:
+					screen.blit(self.selector,(i.storedx,i.storedy))
+
 			screen.blit(wheat_amount,(178 - (text_width/2),435 - (text_height/2)))
 			if self.lightBox > 0:
 				screen.blit(self.wheat_shine,(140,400))
@@ -827,7 +984,6 @@ class Game(object):
 		global particle_list
 
 		# Drawing starts
-
 		for i in self.catList:
 			if i.caged or i.catType == "baby_cat":
 				i.draw(screen)
@@ -1057,6 +1213,7 @@ class Game(object):
 			pos = pygame.mouse.get_pos()
 			for i in self.emptyBList:
 				if i.rect.collidepoint(pos[0],pos[1]) and not pygame.sprite.spritecollide(i, self.emptyCowBList, False) and not pygame.sprite.spritecollide(i, self.catList, False) and not pygame.sprite.spritecollide(i, self.trailList, False) and paused == False:
+					#print("swell")
 					#print(i.id)
 					particle_list = self.create_particles(particle_list, (i.rect.x + 33, i.rect.y + 33), (117,66,0), 40, 25, None)
 					if android:
@@ -1166,6 +1323,27 @@ class Game(object):
 
 					self.hasBagel = "null"
 					self.clicked = False
+
+		#print(self.selecting)
+		if self.clicked == False and self.selecting == True:
+			pos = pygame.mouse.get_pos()
+			for i in self.emptyBList:
+				if i.rect.collidepoint(pos[0],pos[1]) and paused == False:
+					#print(i.id)
+					if self.selecting == True:
+						i.bagelSelected = True
+				elif not i.rect.collidepoint(pos[0],pos[1]):
+					i.bagelSelected = False
+
+			for i in self.bagelList:
+				tempRect = pygame.Rect(i.storedx,i.storedy,66,66)
+				if tempRect.collidepoint(pos[0],pos[1]) and paused == False:
+					#print("naisu")
+					if self.selecting == True:
+						i.bagelSelected = True
+				elif not tempRect.collidepoint(pos[0],pos[1]):
+					i.bagelSelected = False
+
 
 		if self.extinction[0] > 0 and paused == False: # When you have no other place to put this
 			if self.extinction[0] == 255:
@@ -1490,28 +1668,30 @@ class Game(object):
 								if i.bulletCatType == "melon":
 									particle_list = self.create_particles(particle_list, (i.rect.x,i.rect.y + 5), (221,54,37), 10, 33, None)
 									particle_list = self.create_particles(particle_list, (i.rect.x,i.rect.y + 5), (78,181,75), 10, 33, None)
-									k.health -= 60
+									if k.immune == False:
+										k.health -= 60
 								
 						elif i.bulletCatType != "melon":
 							if i.bulletCatType == "bagel":
 								particle_list = self.create_particles(particle_list, (i.rect.x,i.rect.y + 5), (229,218,165), 10, 33, None)
 								if k.immune == False:
-									k.health -= 15
+									k.health -= 10
 							elif i.bulletCatType == "poppy":
 								particle_list = self.create_particles(particle_list, (i.rect.x,i.rect.y + 5), (128,128,128), 10, 33, None)
-								k.health -= 15
+								if k.immune == False:
+									k.health -= 10
 							elif i.bulletCatType == "sesame":
 								particle_list = self.create_particles(particle_list, (i.rect.x,i.rect.y + 5), (217,188,108), 10, 33, None)
 								if k.immune == False:
-									k.health -= 15
+									k.health -= 10
 							elif i.bulletCatType == "garlic":
 								particle_list = self.create_particles(particle_list, (i.rect.x,i.rect.y + 5), (232,226,197), 10, 33, None)
 								if k.immune == False:
-									k.health -= 15
+									k.health -= 10
 							elif i.bulletCatType == "wizard":
 								particle_list = self.create_particles(particle_list, (i.rect.x,i.rect.y - 8), (255,39,1), 10, 33, None)
 								if k.immune == False:
-									k.health -= 30
+									k.health -= 15
 							i.remove()
 							i.kill()
 
@@ -1587,15 +1767,14 @@ class Game(object):
 
 		# Throwin' in the cat speed up from fondue
 		for q in self.catList:
-			if pygame.sprite.spritecollide(q, self.trailList, False) and q.catType != "fondue_cat" and paused == False:
-				for w in self.trailList:
-					if pygame.sprite.collide_rect(w, q):
-						q.speed = 2
-
-			elif not pygame.sprite.spritecollide(q, self.trailList, False) and q.catType != "fondue_cat" and paused == False:
+			if not pygame.sprite.spritecollide(q, self.trailList, False) and q.catType != "fondue_cat" and paused == False:
 				for w in self.trailList:
 					if not pygame.sprite.collide_rect(w, q):
-						q.speed = 1
+						if q.catType != "baby_cat":
+							q.speed = 1
+			else:
+				if q.catType != "baby_cat" and q.catType != "fondue_cat":
+					q.speed = 2
 
 	def createHealthBars(self):
 		for i in self.catList:
