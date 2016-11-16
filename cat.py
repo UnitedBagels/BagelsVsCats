@@ -11,6 +11,7 @@ class Cat(pygame.sprite.Sprite):
 	move = True
 	gameOver = False
 	catNumber = None
+	storedSpeed = 1
 
 	# Eating
 	eat = False

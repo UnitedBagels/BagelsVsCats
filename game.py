@@ -91,6 +91,7 @@ class Game(object):
 	crais_backing = pygame.image.load(os.path.join("images", "crais_backing.png")).convert_alpha()
 	multi_backing = pygame.image.load(os.path.join("images", "multi_backing.png")).convert_alpha()
 	flagel_backing = pygame.image.load(os.path.join("images", "flagel_backing.png")).convert_alpha()
+	numbered_sel = pygame.image.load(os.path.join("images", "numbered_sel.png")).convert_alpha()
 	locked = pygame.image.load(os.path.join("images", "locked.png")).convert_alpha()
 	wheat = pygame.image.load(os.path.join("images", "wheat.png")).convert_alpha()
 	tile = pygame.image.load(os.path.join("images", "tile.png")).convert_alpha()
@@ -417,7 +418,7 @@ class Game(object):
 						i.kill()
 						i.remove()
 						self.wheatCount += 1
-				if event.key == pygame.K_BACKQUOTE:
+				"""if event.key == pygame.K_BACKQUOTE:
 					for i in self.bagelList:
 						if i.rect.collidepoint(pos[0],pos[1]):
 							if i.bagelType != "cow":   # Fix
@@ -436,7 +437,7 @@ class Game(object):
 							i.health = 0
 							if self.particleSetting == False:
 								self.fork.play()
-							self.hasBagel = "null"
+							self.hasBagel = "null" """
 				if event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT:
 					for i in self.bagelList:
 						if i.bagelType == "cow" and i.sleepTimer > 0 and i.milkLeft > 0 and self.milk < 40:
@@ -449,7 +450,6 @@ class Game(object):
 					pos = pygame.mouse.get_pos()
 					for i in self.emptyBList:
 						if i.rect.collidepoint(pos[0],pos[1]):
-							print("please")
 							if self.page == 1:
 								if event.key == pygame.K_1 and self.wheatRecharge == False and self.hasBagel != "wheat" and (self.wheatCount >= self.wheatCost):
 									self.hasBagel = "wheat"
@@ -503,7 +503,25 @@ class Game(object):
 								if i.bagelType != "cow" and self.milk >= 20: # probably not necessary but hey
 									i.cheeseItUp = 400
 									self.milk -= 20
-									self.hasBagel = "null" 
+									self.hasBagel = "null"
+							if event.key == pygame.K_BACKQUOTE:
+								if i.bagelType != "cow":   # Fix
+									if i.bagelType == "wheat" or i.bagelType == "crais":
+										particle_list = self.create_particles(particle_list, (i.rect.x + 25,i.rect.y + 21), (156,111,40), 40, 25, None)
+									elif i.bagelType == "multi":
+										particle_list = self.create_particles(particle_list, (i.rect.x + 25,i.rect.y + 21), (172,102,45), 40, 25, None)
+									elif i.bagelType == "wizard":
+										particle_list = self.create_particles(particle_list, (i.rect.x + 25,i.rect.y + 21), (229,218,165), 40, 36, None)
+									else:
+										particle_list = self.create_particles(particle_list, (i.rect.x + 25,i.rect.y + 21), (229,218,165), 40, 25, None)
+								else:
+									particle_list = self.create_particles(particle_list, (i.rect.x + 60,i.rect.y + 33), (229,218,165), 40, 25, None)
+								if android:
+									android.vibrate(0.05)
+								i.health = 0
+								if self.particleSetting == False:
+									self.fork.play()
+								self.hasBagel = "null"
 
 			#if event.type == pygame.MOUSEMOTION:
 
@@ -972,6 +990,10 @@ class Game(object):
 			if self.lightBox > 0:
 				screen.blit(self.wheat_shine,(140,400))
 				self.lightBox -= 1
+
+			# Numbered Selector Mode
+			if self.selecting == True:
+				screen.blit(self.numbered_sel,(306,446))
 
 			# Wave bar
 			self.wavePercent = self.waveTime / 3600
@@ -1767,14 +1789,15 @@ class Game(object):
 
 		# Throwin' in the cat speed up from fondue
 		for q in self.catList:
-			if not pygame.sprite.spritecollide(q, self.trailList, False) and q.catType != "fondue_cat" and paused == False:
+			if pygame.sprite.spritecollide(q, self.trailList, False) and q.catType != "fondue_cat" and paused == False:
 				for w in self.trailList:
-					if not pygame.sprite.collide_rect(w, q):
-						if q.catType != "baby_cat":
-							q.speed = 1
-			else:
+					if pygame.sprite.collide_rect(w, q):
+						if q.catType != "baby_cat" and q.catType != "fondue_cat":
+							q.speed = 2
+
+			if not pygame.sprite.spritecollide(q, self.trailList, False) and q.catType != "fondue_cat" and paused == False:
 				if q.catType != "baby_cat" and q.catType != "fondue_cat":
-					q.speed = 2
+					q.speed = q.storedSpeed
 
 	def createHealthBars(self):
 		for i in self.catList:
@@ -1862,6 +1885,8 @@ class Game(object):
 		self.allSprites.empty()
 		self.bagelCatList.empty()
 		self.cageList.empty()
+		self.rope_list = []
+		self.ninja_cat_rope_list = []
 		self.page = 1
 		self.hasBagel = "null"
 		self.plainRecharge = False

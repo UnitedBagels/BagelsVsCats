@@ -86,7 +86,6 @@ class Bagel(pygame.sprite.Sprite):
 		self.rect.y = y
 		self.storedx = x
 		self.storedy = y
-
 		# More Wheat Bagel Stuff
 		self.wheatTime = random.randrange(600,1200)
 		self.targetGroupX = {}
