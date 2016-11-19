@@ -76,6 +76,8 @@ class Bagel(pygame.sprite.Sprite):
 	explosionTimer = 30
 	triggered = False
 
+	# Mini Bagel Stuff
+
 	def __init__(self,x,y):
 		pygame.sprite.Sprite.__init__(self)
 		#self.image = pygame.Surface([66, 66])
@@ -89,7 +91,11 @@ class Bagel(pygame.sprite.Sprite):
 		# More Wheat Bagel Stuff
 		self.wheatTime = random.randrange(600,1200)
 		self.targetGroupX = {}
-
+		self.group = {
+			"m1":[35,random.randrange(50,350),True], # fireTimer, blinkTimer, alive
+			"m2":[105,random.randrange(50,350),True],
+			"m3":[70,random.randrange(50,350),True]
+		}
 
 	def reInit(self,bagelType,image,health):
 		self.bagelType = bagelType
@@ -104,6 +110,9 @@ class Bagel(pygame.sprite.Sprite):
 			self.rect = self.image.get_rect()
 			self.rect.x = self.storedx - 63
 			self.rect.y = self.storedy
+		elif bagelType == "mini":
+			self.rect.x += 3
+			self.rect.y += 9
 		else:
 			self.rect.x += 8
 			self.rect.y += 12
@@ -112,8 +121,7 @@ class Bagel(pygame.sprite.Sprite):
 			self.blockChance = random.choice([1,2])
 
 
-
-	def fire(self,bulletImage,bulletList,allSprites,catList,poppy_shot,sesame_shot,garlic_shot):
+	def fire(self,bulletImage,bulletList,allSprites,catList,poppy_shot,sesame_shot,garlic_shot,mini_shot):
 		if self.cheeseItUp > 0 and self.bagelType != "multi":
 			if self.paused == False:
 				self.cheeseItUp -= 1
@@ -256,7 +264,27 @@ class Bagel(pygame.sprite.Sprite):
 				if self.fistTimer <= 0:
 					self.fireTimer = 0
 
-	def animate(self,paused,bagel_blink,wheat_blink,plain_bagel,wheat_bagel,poppy_bagel,poppy_bagel_blink,poppy_bagel_shooting,poppy_bagel_shooting_blink,sesame_bagel,sesame_bagel_blink,wizard_bagel1,wizard_bagel1_blink,wizard_bagel2,wizard_bagel2_blink,wizard_bagel3,wizard_bagel3_blink,cow_bagel,cow_bagel_blink,everything_bagel,everything_bagel_blink,everything_bagel_shooting,everything_bagel_shooting_blink,crais_bagel,crais_bagel_blink,multigrain,multigrain_blink,multigrain_angry,multigrain_angry_blink,flagel,flagel_blink):
+		elif self.bagelType == "mini":
+			for i in catList:
+				if (i.rect.y <= self.rect.y <= i.rect.y + 21 or i.rect.y <= self.rect.y + 21 <= i.rect.y + 21) and (i.rect.x > self.rect.x) and (i.rect.x <= 800):
+					self.fired = True
+					self.shoot = i
+
+			"""if self.fired == True and self.paused == False:
+				self.fireTimer += self.fireSpeed"""
+
+			if self.shoot not in catList:
+				self.fired = False
+
+			"""if self.fireTimer >= 60:
+				bullet = Bullet(self.rect.x + 21, self.rect.y + 13, bulletImage, "plain", 1, 0, False)
+				bullet.add(bulletList)
+				bullet.add(allSprites)
+				bullet.bulletType = "bagel"
+				self.fireTimer = 0"""
+
+
+	def animate(self,paused,bagel_blink,wheat_blink,plain_bagel,wheat_bagel,poppy_bagel,poppy_bagel_blink,poppy_bagel_shooting,poppy_bagel_shooting_blink,sesame_bagel,sesame_bagel_blink,wizard_bagel1,wizard_bagel1_blink,wizard_bagel2,wizard_bagel2_blink,wizard_bagel3,wizard_bagel3_blink,cow_bagel,cow_bagel_blink,everything_bagel,everything_bagel_blink,everything_bagel_shooting,everything_bagel_shooting_blink,crais_bagel,crais_bagel_blink,multigrain,multigrain_blink,multigrain_angry,multigrain_angry_blink,flagel,flagel_blink,mini_bagels_blink):
 		self.paused = paused
 		if self.blink == False:
 			self.blinkTimer += 1

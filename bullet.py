@@ -15,6 +15,9 @@ class Bullet(pygame.sprite.Sprite):
 	step = 1
 	level = 0
 
+	# Mini Bagels
+	bulletHeight = 0
+
 	def __init__(self, x, y, image, bulletType, damage, bagely, inverse):
 		pygame.sprite.Sprite.__init__(self)
 		self.image = image

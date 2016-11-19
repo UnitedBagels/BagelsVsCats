@@ -141,7 +141,7 @@ class Cat(pygame.sprite.Sprite):
 			self.eatAnimationTime = 0
 
 
-	def eatEmTacoCat(self,bagelList,emptyBList,ghostBagelList,allSprites,plain,poppy,wizard_bagel1,wizard_bagel2,wizard_bagel3,every,crais):
+	def eatEmTacoCat(self,bagelList,emptyBList,ghostBagelList,allSprites,plain,poppy,wizard_bagel1,wizard_bagel2,wizard_bagel3,every,crais,mini_bagelsd2):
 		if self.victim != None and self.caged == False:
 			self.eat = True
 			self.move = False
@@ -160,7 +160,7 @@ class Cat(pygame.sprite.Sprite):
 				if self.victim.immune == False:
 					self.victim.health -= 1
 
-			elif self.victim.bagelType == "plain" or self.victim.bagelType == "poppy" or self.victim.bagelType == "wizard" or self.victim.bagelType == "everything" or self.victim.bagelType == "crais":
+			elif self.victim.bagelType == "plain" or self.victim.bagelType == "poppy" or self.victim.bagelType == "wizard" or self.victim.bagelType == "everything" or self.victim.bagelType == "crais" or self.victim.bagelType == "mini":
 				if self.victim.bagelType == "plain":
 					ghostBagel = GhostBagel(self.victim.rect.x,self.victim.rect.y,plain)
 					ghostBagel.add(allSprites)
@@ -190,6 +190,16 @@ class Cat(pygame.sprite.Sprite):
 					ghostBagel = GhostBagel(self.victim.rect.x,self.victim.rect.y,crais)
 					ghostBagel.add(allSprites)
 					ghostBagel.add(ghostBagelList)
+				elif self.victim.bagelType == "mini":
+					ghostBagel1 = GhostBagel(self.victim.rect.x + 2,self.victim.rect.y + 1,mini_bagelsd2)
+					ghostBagel1.add(allSprites)
+					ghostBagel1.add(ghostBagelList)
+					ghostBagel2 = GhostBagel(self.victim.rect.x + 8,self.victim.rect.y + 29,mini_bagelsd2)
+					ghostBagel2.add(allSprites)
+					ghostBagel2.add(ghostBagelList)
+					ghostBagel3 = GhostBagel(self.victim.rect.x + 37,self.victim.rect.y + 13,mini_bagelsd2)
+					ghostBagel3.add(allSprites)
+					ghostBagel3.add(ghostBagelList)
 
 				self.move = True
 				self.victim.remove(bagelList)

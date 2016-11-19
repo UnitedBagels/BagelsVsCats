@@ -91,6 +91,7 @@ class Game(object):
 	crais_backing = pygame.image.load(os.path.join("images", "crais_backing.png")).convert_alpha()
 	multi_backing = pygame.image.load(os.path.join("images", "multi_backing.png")).convert_alpha()
 	flagel_backing = pygame.image.load(os.path.join("images", "flagel_backing.png")).convert_alpha()
+	mini_backing = pygame.image.load(os.path.join("images", "mini_backing.png")).convert_alpha()
 	numbered_sel = pygame.image.load(os.path.join("images", "numbered_sel.png")).convert_alpha()
 	locked = pygame.image.load(os.path.join("images", "locked.png")).convert_alpha()
 	wheat = pygame.image.load(os.path.join("images", "wheat.png")).convert_alpha()
@@ -201,6 +202,10 @@ class Game(object):
 	flagel_puff1 = pygame.image.load(os.path.join("images", "flagel_puff1.png")).convert_alpha()
 	flagel_puff2 = pygame.image.load(os.path.join("images", "flagel_puff2.png")).convert_alpha()
 	flagel_blink = pygame.image.load(os.path.join("images", "flagel_blink.png")).convert_alpha()
+	mini_bagels = pygame.image.load(os.path.join("images", "mini_bagels.png")).convert_alpha()
+	mini_bagels1d = pygame.image.load(os.path.join("images", "mini_bagels1d.png")).convert_alpha()
+	mini_bagels2d = pygame.image.load(os.path.join("images", "mini_bagels2d.png")).convert_alpha()
+	mini_bagels_blink = pygame.image.load(os.path.join("images", "mini_bagels_blink.png")).convert_alpha()
 	cat = pygame.image.load(os.path.join("images", "cat.png")).convert_alpha()
 	taco_cat = pygame.image.load(os.path.join("images", "taco_cat.png")).convert_alpha()
 	melon_cat = pygame.image.load(os.path.join("images", "melon_cat.png")).convert_alpha()
@@ -226,6 +231,8 @@ class Game(object):
 	wizard_shot = pygame.image.load(os.path.join("images", "wizard_shot.png")).convert_alpha()
 	sesame_shot = pygame.image.load(os.path.join("images", "sesame_shot.png")).convert_alpha()
 	garlic_shot = pygame.image.load(os.path.join("images", "garlic_shot.png")).convert_alpha()
+	mini_shot = pygame.image.load(os.path.join("images", "mini_shot.png")).convert_alpha()
+	hole_cover = pygame.image.load(os.path.join("images", "hole_cover.png")).convert_alpha()
 	first_charge = pygame.image.load(os.path.join("images", "first_charge.png")).convert_alpha()
 	second_charge = pygame.image.load(os.path.join("images", "second_charge.png")).convert_alpha()
 	remote_control1 = pygame.image.load(os.path.join("images", "remote_control1.png")).convert_alpha()
@@ -284,6 +291,7 @@ class Game(object):
 	craisRecharge = False
 	multiRecharge = False
 	flagelRecharge = False
+	miniRecharge = False
 	plainRechargeTime = 0
 	wheatRechargeTime = 0
 	poppyRechargeTime = 0
@@ -294,6 +302,7 @@ class Game(object):
 	craisRechargeTime = 0
 	multiRechargeTime = 0
 	flagelRechargeTime = 0
+	miniRechargeTime = 0
 
 	plainCapacity = 200
 	wheatCapacity = 425
@@ -305,6 +314,7 @@ class Game(object):
 	craisCapacity = 600
 	multiCapacity = 600
 	flagelCapacity = 900
+	miniCapacity = 75
 
 	# spawnCats
 	preGame = True
@@ -337,6 +347,7 @@ class Game(object):
 	craisCost = 4
 	multiCost = 5
 	flagelCost = 6
+	miniCost = 1
 	wheatMoveList = []
 
 	# Danger! variables
@@ -392,21 +403,12 @@ class Game(object):
 					pygame.mouse.set_visible(True)
 				if event.key == pygame.K_TAB:
 					if self.page == 1:
-						self.page += 1
+						self.page = 2
 					elif self.page == 2:
-						self.page -= 1
+						self.page = 3
+					elif self.page == 3:
+						self.page = 1
 					self.hasBagel = "null"
-				if event.key == pygame.K_SPACE:
-					for i in self.wheatList:
-						bullet_vec_x = i.rect.x - 145
-						bullet_vec_y = i.rect.y - 405
-						vec_length = math.sqrt(bullet_vec_x ** 2 + bullet_vec_y ** 2)
-						bullet_vec_x = (bullet_vec_x / vec_length) * 13
-						bullet_vec_y = (bullet_vec_y / vec_length) * 13
-						self.wheatMoveList.append([bullet_vec_x,bullet_vec_y,i.rect.x,i.rect.y])
-						i.kill()
-						i.remove()
-						self.wheatCount += 1
 				if event.key == pygame.K_SPACE:
 					for i in self.wheatList:
 						bullet_vec_x = i.rect.x - 145
@@ -482,6 +484,10 @@ class Game(object):
 								if event.key == pygame.K_5 and self.flagelRecharge == False and self.hasBagel != "flagel" and (self.wheatCount >= self.flagelCost):
 									self.hasBagel = "flagel"
 									self.clicked = True
+							elif self.page == 3:
+								if event.key == pygame.K_1 and self.miniRecharge == False and self.hasBagel != "mini" and (self.wheatCount >= self.miniCost):
+									self.hasBagel = "mini"
+									self.clicked = True
 
 					for i in self.bagelList:
 						if i.rect.collidepoint(pos[0],pos[1]) and i.bagelType == "wizard" and i.level < 3:
@@ -556,9 +562,11 @@ class Game(object):
 
 					if self.arrow_button.collidepoint(pos[0],pos[1]):
 						if self.page == 1:
-							self.page += 1
+							self.page = 2
 						elif self.page == 2:
-							self.page -= 1
+							self.page = 3
+						elif self.page == 3:
+							self.page = 1
 						self.hasBagel = "null"
 
 					# Check for box collisions
@@ -613,6 +621,12 @@ class Game(object):
 						if self.box5.collidepoint(pos[0],pos[1]) and self.flagelRecharge == False and self.hasBagel != "flagel" and (self.wheatCount >= self.flagelCost):
 							self.hasBagel = "flagel"
 						elif self.box5.collidepoint(pos[0],pos[1]) and self.flagelRecharge == False and self.hasBagel == "flagel" and (self.wheatCount >= self.flagelCost):
+							self.hasBagel = "null"
+
+					elif self.page == 3:
+						if self.box1.collidepoint(pos[0],pos[1]) and self.miniRecharge == False and self.hasBagel != "mini" and (self.wheatCount >= self.miniCost):
+							self.hasBagel = "mini"
+						elif self.box1.collidepoint(pos[0],pos[1]) and self.miniRecharge == False and self.hasBagel == "mini" and (self.wheatCount >= self.miniCost):
 							self.hasBagel = "null"
 
 					# This is separate
@@ -834,6 +848,7 @@ class Game(object):
 			craisBar = round(42 * (self.craisRechargeTime / self.craisCapacity))
 			multiBar = round(42 * (self.multiRechargeTime / self.multiCapacity))
 			flagelBar = round(42 * (self.flagelRechargeTime / self.flagelCapacity))
+			miniBar = round(42 * (self.miniRechargeTime / self.miniCapacity))
 
 			if self.page == 1:
 				if self.wheatRecharge == False:
@@ -909,6 +924,15 @@ class Game(object):
 				screen.blit(self.multi_backing,(535,410))
 				screen.blit(self.flagel_backing,(640,410))
 
+			elif self.page == 3:
+				if self.miniRecharge == False:
+					pygame.draw.rect(screen,(255,255,255),(220,410,100,50))
+				elif self.miniRecharge == True:
+					pygame.draw.rect(screen,(64,193,225),(220,410,100,50))
+					pygame.draw.rect(screen,(255,255,255),(224,414,92,miniBar))
+
+				screen.blit(self.mini_backing,(220,410))
+
 			# Forks
 
 			if self.hasBagel == "fork":
@@ -940,6 +964,10 @@ class Game(object):
 				if self.hasBagel == "flagel":
 					screen.blit(self.selected,(640,410))
 
+			elif self.page == 3:
+				if self.hasBagel == "mini":
+					screen.blit(self.selected,(220,410))
+
 			# Gray out boxes
 
 			if self.page == 1:
@@ -966,6 +994,9 @@ class Game(object):
 				if self.flagelCost > self.wheatCount:
 					screen.blit(self.locked,(640,410))
 
+			elif self.page == 3:
+				if self.miniCost > self.wheatCount:
+					screen.blit(self.locked,(220,410))
 
 			# Milk and wheat
 			milkPercent = self.milk / 40
@@ -1118,30 +1149,32 @@ class Game(object):
 
 		for i in self.bagelList:
 			i.destroy(self.bagelList,self.emptyBList,self.emptyCowBList)
-			if (paused == False and self.gameOver == False):
-				if i.bagelType == "plain":
-					i.fire(self.bagel_shot,self.bulletList,self.allSprites,self.catList,self.poppy_shot,self.sesame_shot,self.garlic_shot)
-				elif i.bagelType == "poppy":
-					i.fire(self.poppy_shot,self.bulletList,self.allSprites,self.catList,self.poppy_shot,self.sesame_shot,self.garlic_shot)
-				elif i.bagelType == "wizard":
-					i.fire(self.wizard_shot,self.bulletList,self.allSprites,self.catList,self.poppy_shot,self.sesame_shot,self.garlic_shot)
+			if paused == False:
+				if i.bagelType == "plain" and self.gameOver == False:
+					i.fire(self.bagel_shot,self.bulletList,self.allSprites,self.catList,self.poppy_shot,self.sesame_shot,self.garlic_shot,self.mini_shot)
+					if 53 <= i.fireTimer <= 60 and i.fired == True:
+						screen.blit(self.hole_cover,(i.rect.x + 21, i.rect.y + 13))
+				elif i.bagelType == "poppy" and self.gameOver == False:
+					i.fire(self.poppy_shot,self.bulletList,self.allSprites,self.catList,self.poppy_shot,self.sesame_shot,self.garlic_shot,self.mini_shot)
+				elif i.bagelType == "wizard" and self.gameOver == False:
+					i.fire(self.wizard_shot,self.bulletList,self.allSprites,self.catList,self.poppy_shot,self.sesame_shot,self.garlic_shot,self.mini_shot)
 					# Charge stuff here
 					if i.fired == True:
 						if 150 > i.fireTimer >= 50:
 							screen.blit(self.first_charge,(i.rect.x + 17, i.rect.y + 27)) #24,15
 						elif 200 > i.fireTimer >= 150:
 							screen.blit(self.second_charge,(i.rect.x + 17, i.rect.y + 27)) #22,13
-				elif i.bagelType == "everything":
-					i.fire(self.poppy_shot,self.bulletList,self.allSprites,self.catList,self.poppy_shot,self.sesame_shot,self.garlic_shot)
-				elif i.bagelType == "multi":
-					i.fire(self.poppy_shot,self.bulletList,self.allSprites,self.catList,self.poppy_shot,self.sesame_shot,self.garlic_shot)
-				elif i.bagelType == "flagel":
+				elif i.bagelType == "everything" and self.gameOver == False:
+					i.fire(self.poppy_shot,self.bulletList,self.allSprites,self.catList,self.poppy_shot,self.sesame_shot,self.garlic_shot,self.mini_shot)
+				elif i.bagelType == "multi" and self.gameOver == False:
+					i.fire(self.poppy_shot,self.bulletList,self.allSprites,self.catList,self.poppy_shot,self.sesame_shot,self.garlic_shot,self.mini_shot)
+				elif i.bagelType == "flagel" and self.gameOver == False:
 					i.erosion(self.catList,self.allSprites,self.explosionList,self.flagel_puff1,self.flagel_puff2,self.extinction)
 
-				i.animate(paused,self.bagel_blink,self.wheat_blink,self.plain_bagel,self.wheat_bagel,self.poppy_bagel,self.poppy_bagel_blink,self.poppy_bagel_shooting,self.poppy_bagel_shooting_blink,self.sesame_bagel,self.sesame_bagel_blink,self.wizard_bagel1,self.wizard_bagel1_blink,self.wizard_bagel2,self.wizard_bagel2_blink,self.wizard_bagel3,self.wizard_bagel3_blink,self.cow_bagel,self.cow_bagel_blink,self.everything_bagel,self.everything_bagel_blink,self.everything_bagel_shooting,self.everything_bagel_shooting_blink,self.crais_bagel,self.crais_bagel_blink,self.multigrain,self.multigrain_blink,self.multigrain_angry,self.multigrain_angry_blink,self.flagel,self.flagel_blink)
+				i.animate(paused,self.bagel_blink,self.wheat_blink,self.plain_bagel,self.wheat_bagel,self.poppy_bagel,self.poppy_bagel_blink,self.poppy_bagel_shooting,self.poppy_bagel_shooting_blink,self.sesame_bagel,self.sesame_bagel_blink,self.wizard_bagel1,self.wizard_bagel1_blink,self.wizard_bagel2,self.wizard_bagel2_blink,self.wizard_bagel3,self.wizard_bagel3_blink,self.cow_bagel,self.cow_bagel_blink,self.everything_bagel,self.everything_bagel_blink,self.everything_bagel_shooting,self.everything_bagel_shooting_blink,self.crais_bagel,self.crais_bagel_blink,self.multigrain,self.multigrain_blink,self.multigrain_angry,self.multigrain_angry_blink,self.flagel,self.flagel_blink,self.mini_bagels_blink)
 				i.spawnWheat(self.wheat_stretch,self.wheat_bagel,self.wheat,self.wheatList,self.allSprites)
 
-				if i.bagelType == "cow" and (paused == False and self.gameOver == False):
+				if i.bagelType == "cow" and self.gameOver == False:
 					if i.milkLeft <= 0:
 						if i.zzzAlpha > 0:
 							i.cow_zzz.set_alpha(i.zzzAlpha)
@@ -1152,11 +1185,72 @@ class Game(object):
 							i.zzzHeight = 10
 							i.zzzAlpha = 255
 
+				elif i.bagelType == "mini": # No gameOver == False
+					i.fire(self.poppy_shot,self.bulletList,self.allSprites,self.catList,self.poppy_shot,self.sesame_shot,self.garlic_shot,self.mini_shot)
+					for k, v in i.group.iteritems():
+						if k == "m1" and v[2] == True:
+							v[1] -= 1
+							if 0 < v[1] <= 10:
+								screen.blit(self.mini_bagels_blink,(i.rect.x + 11,i.rect.y + 6))
+							elif v[1] <= 0:
+								v[1] = random.randrange(50,350)
+
+							if i.fired == True and paused == False and self.gameOver == False:
+								v[0] += i.fireSpeed
+								if v[0] >= 140:
+									bullet1 = Bullet(i.rect.x + 12, i.rect.y + 11, self.mini_shot, "mini", 0.5, 0, False)
+									bullet1.add(self.bulletList)
+									bullet1.add(self.allSprites)
+									bullet1.bulletHeight = 34
+									v[0] = 0
+						elif k == "m2" and v[2] == True:
+							v[1] -= 1
+							if 0 < v[1] <= 10:
+								screen.blit(self.mini_bagels_blink,(i.rect.x + 17,i.rect.y + 34))
+							elif v[1] <= 0:
+								v[1] = random.randrange(50,350)
+							if i.fired == True and paused == False and self.gameOver == False:
+								v[0] += i.fireSpeed
+								if v[0] >= 140:
+									bullet2 = Bullet(i.rect.x + 19, i.rect.y + 39, self.mini_shot, "mini", 0.5, 0, False)
+									bullet2.add(self.bulletList)
+									bullet2.add(self.allSprites)
+									bullet2.bulletHeight = 14
+									v[0] = 0
+						elif k == "m3" and v[2] == True:
+							v[1] -= 1
+							if 0 < v[1] <= 10:
+								screen.blit(self.mini_bagels_blink,(i.rect.x + 46,i.rect.y + 18))
+							elif v[1] <= 0:
+								v[1] = random.randrange(50,350)
+							if i.fired == True and paused == False and self.gameOver == False:
+								v[0] += i.fireSpeed
+								if v[0] >= 140:
+									bullet3 = Bullet(i.rect.x + 47, i.rect.y + 23, self.mini_shot, "mini", 0.5, 0, False)
+									bullet3.add(self.bulletList)
+									bullet3.add(self.allSprites)
+									bullet3.bulletHeight = 24
+									v[0] = 0
+						if 60 < i.health <= 120:
+							i.image = self.mini_bagels1d
+							i.mask = pygame.mask.from_surface(i.image)
+							#i.rect.x = i.storedx + 3
+							#i.rect.y = i.storedy + 9
+							if k == "m3":
+								v[2] = False
+						elif 0 < i.health <= 60:
+							i.image = self.mini_bagels2d
+							i.mask = pygame.mask.from_surface(i.image)
+							#i.rect.x = i.storedx + 3
+							#i.rect.y = i.storedy + 9
+							if k == "m2":
+								v[2] = False
+
 		for i in self.catList:
 			if i.catType == "cat" or i.catType == "baby_cat" or i.catType == "ninja_cat" or i.catType == "fondue_cat":
 				i.eatEmCat(self.bagelList,self.emptyBList)
 			elif i.catType == "taco_cat":
-				i.eatEmTacoCat(self.bagelList,self.emptyBList,self.ghostBagelList,self.allSprites,self.plain_bagel,self.poppy_bagel,self.wizard_bagel1,self.wizard_bagel2,self.wizard_bagel3,self.everything_bagel,self.crais_bagel)
+				i.eatEmTacoCat(self.bagelList,self.emptyBList,self.ghostBagelList,self.allSprites,self.plain_bagel,self.poppy_bagel,self.wizard_bagel1,self.wizard_bagel2,self.wizard_bagel3,self.everything_bagel,self.crais_bagel,self.mini_bagels2d)
 			if i.catType == "melon_cat":
 				i.eatEmCat(self.bagelList,self.emptyBList)
 				i.melonFire(self.bagelList,self.melon_cat_shot,self.catBulletList,self.allSprites)
@@ -1340,6 +1434,15 @@ class Game(object):
 						i.remove(self.emptyBList)
 						self.flagelRecharge = True
 						self.wheatCount -= self.flagelCost
+						if self.particleSetting == False:
+							self.bagelPlace.play()
+
+					elif self.hasBagel == "mini":
+						i.reInit("mini",self.mini_bagels,180)
+						i.add(self.bagelList)
+						i.remove(self.emptyBList)
+						self.miniRecharge = True
+						self.wheatCount -= self.miniCost
 						if self.particleSetting == False:
 							self.bagelPlace.play()
 
@@ -1664,6 +1767,19 @@ class Game(object):
 									self.bagelSplat.play()
 								particle_list = self.create_particles(particle_list, (i.rect.x,i.rect.y + 5), (221,54,37), 10, 33, None)
 								particle_list = self.create_particles(particle_list, (i.rect.x,i.rect.y + 5), (78,181,75), 10, 33, None)
+						elif i.bulletType == "mini":
+							if k.shield > 0:
+								k.shield -= i.damage
+							else:
+								k.health -= i.damage
+
+							if self.particleSetting == False:
+								pass
+								#self.bagelSplat.play()
+							i.kill()
+							i.remove()
+							particle_list = self.create_particles(particle_list, (i.rect.x,i.rect.y), (229,218,165), 1, i.bulletHeight, None)
+
 					
 	def catProjectileCollision(self):
 		global particle_list
@@ -1990,6 +2106,11 @@ class Game(object):
 					self.flagelRecharge = False
 					self.flagelRechargeTime = 0
 					self.flagelCapacity = 900 # Specific to flagels, after extinction
+			if self.miniRecharge == True:
+				self.miniRechargeTime += 1
+				if self.miniRechargeTime >= self.miniCapacity:
+					self.miniRecharge = False
+					self.miniRechargeTime = 0
 
 	def musicTracks(self):
 		music_volume = 0.03 * (self.music_slider_value / 184) # 0.08
