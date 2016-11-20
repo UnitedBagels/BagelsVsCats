@@ -44,7 +44,7 @@ class Game(object):
 	title_screen = pygame.image.load(os.path.join("images", "title_screen.png")).convert_alpha()
 	pressed_play_button = pygame.image.load(os.path.join("images", "pressed_play_button.png")).convert_alpha()
 	version_font = pygame.font.Font("visitor1.ttf",30)
-	version = version_font.render("Alpha 1.5.2",False,(0,0,0))
+	version = version_font.render("Alpha 1.5.3",False,(0,0,0))
 	gameOver = False
 
 	# Pause
