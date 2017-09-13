@@ -90,7 +90,6 @@ class Cat(pygame.sprite.Sprite):
 						self.garlicTimer = 0
 						self.healthTick = 0
 
-		# It's rainin' pizzas
 	def rainPizzas(self,pizza,allSprites,ghostBagelList,pizza_cat_ns,pizza_cat_eating_ns): #ns = no shield
 		if self.shield <= 0:
 			if self.pizzaDown == False:
@@ -141,7 +140,7 @@ class Cat(pygame.sprite.Sprite):
 			self.eatAnimationTime = 0
 
 
-	def eatEmTacoCat(self,bagelList,emptyBList,ghostBagelList,allSprites,plain,poppy,wizard_bagel1,wizard_bagel2,wizard_bagel3,every,crais,mini_bagelsd2):
+	def eatEmTacoCat(self,bagelList,emptyBList,ghostBagelList,allSprites,plain,poppy,wizard_bagel1,wizard_bagel2,wizard_bagel3,every,crais,mini_bagelsd2,toaster,toasted_mini):
 		if self.victim != None and self.caged == False:
 			self.eat = True
 			self.move = False
@@ -160,7 +159,7 @@ class Cat(pygame.sprite.Sprite):
 				if self.victim.immune == False:
 					self.victim.health -= 1
 
-			elif self.victim.bagelType == "plain" or self.victim.bagelType == "poppy" or self.victim.bagelType == "wizard" or self.victim.bagelType == "everything" or self.victim.bagelType == "crais" or self.victim.bagelType == "mini":
+			elif self.victim.bagelType == "plain" or self.victim.bagelType == "poppy" or self.victim.bagelType == "wizard" or self.victim.bagelType == "everything" or self.victim.bagelType == "crais" or self.victim.bagelType == "mini" or self.victim.bagelType == "toaster":
 				if self.victim.bagelType == "plain":
 					ghostBagel = GhostBagel(self.victim.rect.x,self.victim.rect.y,plain)
 					ghostBagel.add(allSprites)
@@ -200,6 +199,31 @@ class Cat(pygame.sprite.Sprite):
 					ghostBagel3 = GhostBagel(self.victim.rect.x + 37,self.victim.rect.y + 13,mini_bagelsd2)
 					ghostBagel3.add(allSprites)
 					ghostBagel3.add(ghostBagelList)
+				elif self.victim.bagelType == "toaster": # Mini bagels fall out of toaster (if they are toasted then fall out toasted)
+					if self.victim.loaded == 0 and self.victim.toastTimer != 0:
+						ghostBagel1 = GhostBagel(self.victim.rect.x,self.victim.rect.y,toaster)
+						ghostBagel1.add(allSprites)
+						ghostBagel1.add(ghostBagelList)
+					elif self.victim.loaded == 1 and self.victim.toastTimer != 0:
+						ghostBagel1 = GhostBagel(self.victim.rect.x,self.victim.rect.y,toaster)
+						ghostBagel1.add(allSprites)
+						ghostBagel1.add(ghostBagelList)
+						ghostBagel2 = GhostBagel(self.victim.rect.x,self.victim.rect.y,mini_bagelsd2)
+						ghostBagel2.add(allSprites)
+						ghostBagel2.add(ghostBagelList)
+						ghostBagel3 = GhostBagel(self.victim.rect.x,self.victim.rect.y,mini_bagelsd2)
+						ghostBagel3.add(allSprites)
+						ghostBagel3.add(ghostBagelList)
+					elif self.victim.loaded == 1 and self.victim.toastTimer <= 0:
+						ghostBagel1 = GhostBagel(self.victim.rect.x,self.victim.rect.y,toaster)
+						ghostBagel1.add(allSprites)
+						ghostBagel1.add(ghostBagelList)
+						ghostBagel2 = GhostBagel(self.victim.rect.x,self.victim.rect.y,toasted_mini)
+						ghostBagel2.add(allSprites)
+						ghostBagel2.add(ghostBagelList)
+						ghostBagel3 = GhostBagel(self.victim.rect.x,self.victim.rect.y,toasted_mini)
+						ghostBagel3.add(allSprites)
+						ghostBagel3.add(ghostBagelList)
 
 				self.move = True
 				self.victim.remove(bagelList)

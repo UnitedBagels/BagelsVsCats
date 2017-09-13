@@ -69,14 +69,18 @@ class Bagel(pygame.sprite.Sprite):
 	fistTimer = 25
 	holdMelon = False
 	holdMelonTimer = 200
-	blockChance = 0
 
 	# Flagel Stuff
 	exploded = False
 	explosionTimer = 30
 	triggered = False
 
-	# Mini Bagel Stuff
+	# Toaster Stuff
+	loaded = 0
+	toastTimer = 300
+	targetDict = {}
+	targetCat = 0
+	targetArea = 0
 
 	def __init__(self,x,y):
 		pygame.sprite.Sprite.__init__(self)
@@ -113,12 +117,13 @@ class Bagel(pygame.sprite.Sprite):
 		elif bagelType == "mini":
 			self.rect.x += 3
 			self.rect.y += 9
+		elif bagelType == "toaster":
+			self.rect.x += 6
+			self.rect.y += 2
 		else:
 			self.rect.x += 8
 			self.rect.y += 12
 		self.blinkTime = random.randrange(50,350)  # Changes
-		if self.bagelType == "multi":
-			self.blockChance = random.choice([1,2])
 
 
 	def fire(self,bulletImage,bulletList,allSprites,catList,poppy_shot,sesame_shot,garlic_shot,mini_shot):
@@ -284,7 +289,7 @@ class Bagel(pygame.sprite.Sprite):
 				self.fireTimer = 0"""
 
 
-	def animate(self,paused,bagel_blink,wheat_blink,plain_bagel,wheat_bagel,poppy_bagel,poppy_bagel_blink,poppy_bagel_shooting,poppy_bagel_shooting_blink,sesame_bagel,sesame_bagel_blink,wizard_bagel1,wizard_bagel1_blink,wizard_bagel2,wizard_bagel2_blink,wizard_bagel3,wizard_bagel3_blink,cow_bagel,cow_bagel_blink,everything_bagel,everything_bagel_blink,everything_bagel_shooting,everything_bagel_shooting_blink,crais_bagel,crais_bagel_blink,multigrain,multigrain_blink,multigrain_angry,multigrain_angry_blink,flagel,flagel_blink,mini_bagels_blink):
+	def animate(self,paused,bagel_blink,wheat_blink,plain_bagel,wheat_bagel,poppy_bagel,poppy_bagel_blink,poppy_bagel_shooting,poppy_bagel_shooting_blink,sesame_bagel,sesame_bagel_blink,wizard_bagel1,wizard_bagel1_blink,wizard_bagel2,wizard_bagel2_blink,wizard_bagel3,wizard_bagel3_blink,cow_bagel,cow_bagel_blink,everything_bagel,everything_bagel_blink,everything_bagel_shooting,everything_bagel_shooting_blink,crais_bagel,crais_bagel_blink,multigrain,multigrain_blink,multigrain_angry,multigrain_angry_blink,flagel,flagel_blink,mini_bagels_blink,toaster,toaster_toasting,toaster_done):
 		self.paused = paused
 		if self.blink == False:
 			self.blinkTimer += 1
@@ -396,6 +401,16 @@ class Bagel(pygame.sprite.Sprite):
 			elif self.fire == False:
 				self.image = multigrain
 
+		if self.bagelType == "toaster":
+			if self.loaded == 1:
+				if self.toastTimer > 0:
+					self.image = toaster_toasting
+					self.toastTimer -= 1
+				if self.toastTimer == 0:
+					self.image = toaster_done
+			elif self.loaded == 0:
+				self.image = toaster
+
 	def spawnWheat(self,wheat_stretch,wheat_bagel,wheat_image,wheatList,allSprites):
 		if self.cheeseItUp > 0 :
 			if self.paused == False:
@@ -448,11 +463,12 @@ class Bagel(pygame.sprite.Sprite):
 			self.fistTimer = 0
 			self.holdMelon = False
 			self.holdMelonTimer = 200
-			self.blockChance = 0
 			self.fireSpeed = 1
 			self.targetGroupX = {}
 			self.explosionTimer = 30
 			self.triggered = False
+			self.toastTimer = 300
+			self.loaded = 0
 			if self.bagelType == "cow":
 				self.emptyBagel.remove(emptyCowBList)
 				self.emptyBagel.kill()
@@ -516,7 +532,7 @@ class Bagel(pygame.sprite.Sprite):
 						catCage.dogInside = True
 				self.fireTimer = 0
 
-	def erosion(self,catList,allSprites,explosionList,flagel_puff1,flagel_puff2,extinction):
+	def erosion(self,catList,trailList,allSprites,explosionList,flagel_puff1,flagel_puff2,extinction):
 		if pygame.sprite.spritecollide(self, catList, False, pygame.sprite.collide_mask):
 			self.triggered = True
 
@@ -538,9 +554,54 @@ class Bagel(pygame.sprite.Sprite):
 					for i in catList:
 						i.kill()
 						i.remove()
+					for i in trailList:
+						i.kill()
+						i.remove()
 				self.health = 0
 			self.explosionTimer -= 1
 			#print("woowowoowooo")
+
+	def launchBagels(self,catList,cannonList,allSprites,toasted_mini):
+		for i in catList:
+			if (i.rect.y <= self.rect.y <= i.rect.y + 21 or i.rect.y <= self.rect.y + 21 <= i.rect.y + 21) and (i.rect.x > self.rect.x) and (i.rect.x <= 800):
+				self.targetDict[i.catNumber] = i.rect.x
+		print(self.targetDict)	
+
+		try:
+			self.targetCat = min(self.targetDict, key=self.targetDict.get)
+			self.targetArea = self.targetDict[self.targetCat]  
+			velocity = (self.targetArea - self.rect.x) / 60
+
+			cannon1 = Cannon(self.rect.x + 23, self.rect.y + 15, velocity, -10, toasted_mini)
+			cannon1.add(cannonList)
+			cannon1.add(allSprites)
+			cannon2 = Cannon(self.rect.x + 23, self.rect.y + 15, velocity + 1, -9, toasted_mini)
+			cannon2.add(cannonList)
+			cannon2.add(allSprites)
+
+			self.targetDict.clear()
+
+			if self.cheeseItUp > 0:
+				if self.paused == False:
+					self.cheeseItUp -= 1
+			else:
+				self.loaded = 0
+				self.toastTimer = 300
+
+		except ValueError:
+			pass
+
+		#x = min(float(j) for j in catList)
+
+		#for k in targetList()
+
+
+
+		"""if (i.rect.y <= self.rect.y <= i.rect.y + 21 or i.rect.y <= self.rect.y + 21 <= i.rect.y + 21):
+				if i.rect.x == min(float(k) for k in catList):
+					and (i.rect.x > self.rect.x) and (i.rect.x <= 800)
+			self.fired = True
+			self.shoot = i"""
 
 	def __getstate__(self):
 	    d = dict(self.__dict__)

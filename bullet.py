@@ -153,3 +153,30 @@ class Trail(pygame.sprite.Sprite):
 			if self.countdown <= 1:
 				self.kill()
 				self.remove()
+
+class Cannon(pygame.sprite.Sprite):
+
+	damage = 20
+	startY = 0
+
+	def __init__(self, x, y, dx, dy, image):
+		pygame.sprite.Sprite.__init__(self)
+		self.image = image
+		self.rect = self.image.get_rect()
+
+		self.x_velocity = dx
+		self.y_velocity = dy
+		self.rect.x = x
+		self.rect.y = y
+		self.startY = y
+
+	def update(self):
+		self.y_velocity += 0.35 # Gravity
+		self.rect.x += self.x_velocity
+		self.rect.y += self.y_velocity
+
+		if self.rect.y >= 580:
+			self.kill()
+			self.remove()
+
+

@@ -10,6 +10,7 @@ class Dog(pygame.sprite.Sprite):
 	eat = False
 	immune = False # The laziest way to solve any problem ever
 	bagelType = "dog" # And this too
+	moveTimer = 120
 
 	def __init__(self,x,y,image,image_eating):
 		pygame.sprite.Sprite.__init__(self)
@@ -21,9 +22,16 @@ class Dog(pygame.sprite.Sprite):
 		self.rect.y = y
 
 	def update(self,paused):
+		print(self.moveTimer, self.move)
 		# This is literally copied and pasted from the cat's eat function
-		if self.move == True:
+		if self.move: # Except for this move section
+			self.moveTimer -= 1
+		if 0 < self.moveTimer <= 40 and self.move:
 			self.rect.x += 1
+			self.moveTimer -= 1
+		if self.moveTimer <= 0:
+			self.moveTimer = 120
+
 		if self.rect.x > 875 or self.health <= 0: # He was invincible ... was ...
 			self.kill()
 			self.remove()
