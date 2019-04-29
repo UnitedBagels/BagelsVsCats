@@ -6,7 +6,6 @@ import webbrowser
 from game import *
 
 # Basic Setup
-
 try:
 	import android
 except ImportError:

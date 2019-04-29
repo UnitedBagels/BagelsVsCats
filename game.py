@@ -12,6 +12,7 @@ from pygame.locals import *
 from bagel import Bagel
 from bagel import emptyBagel
 from cat import Cat
+from dog import Dog
 from bullet import Bullet
 from bullet import Trail
 from particle import Particle
@@ -44,7 +45,7 @@ class Game(object):
 	title_screen = pygame.image.load(os.path.join("images", "title_screen.png")).convert_alpha()
 	pressed_play_button = pygame.image.load(os.path.join("images", "pressed_play_button.png")).convert_alpha()
 	version_font = pygame.font.Font("visitor1.ttf",30)
-	version = version_font.render("Alpha 1.5.6",False,(0,0,0))
+	version = version_font.render("Alpha 1.6.0",False,(0,0,0))
 	gameOver = False
 
 	# Pause
@@ -139,10 +140,10 @@ class Game(object):
 		soundOff = False
 		particleSetting = False
 		with open('save.dat', 'wb') as fp:
-			pickle.dump(music_slider_value,fp)
-			pickle.dump(sound_slider_value,fp)
-			pickle.dump(musicOff,fp)
-			pickle.dump(soundOff,fp)
+			pickle.dump(music_slider_value,fp, protocol=2)
+			pickle.dump(sound_slider_value,fp, protocol=2)
+			pickle.dump(musicOff,fp, protocol=2)
+			pickle.dump(soundOff,fp, protocol=2)
 			fp.close()
 
 	# Paused!
@@ -218,6 +219,7 @@ class Game(object):
 	ninja_cat = pygame.image.load(os.path.join("images", "ninja_cat.png")).convert_alpha()
 	pizza_cat = pygame.image.load(os.path.join("images", "pizza_cat.png")).convert_alpha()
 	fondue_cat = pygame.image.load(os.path.join("images", "fondue_cat.png")).convert_alpha()
+	alien_cat = pygame.image.load(os.path.join("images", "alien_cat.png")).convert_alpha()
 	cat_eating = pygame.image.load(os.path.join("images", "cat_eating.png")).convert_alpha()
 	taco_cat_eating = pygame.image.load(os.path.join("images", "taco_cat_eating.png")).convert_alpha()
 	melon_cat_eating = pygame.image.load(os.path.join("images", "melon_cat_eating.png")).convert_alpha()
@@ -230,6 +232,7 @@ class Game(object):
 	pizza_cat_ns = pygame.image.load(os.path.join("images", "pizza_cat_ns.png")).convert_alpha()
 	pizza_cat_eating_ns = pygame.image.load(os.path.join("images", "pizza_cat_eating_ns.png")).convert_alpha()
 	fondue_cat_eating = pygame.image.load(os.path.join("images", "fondue_cat_eating.png")).convert_alpha()
+	alien_cat_eating = pygame.image.load(os.path.join("images", "alien_cat_eating.png")).convert_alpha()
 	bagel_shot = pygame.image.load(os.path.join("images", "bagel_shot.png")).convert_alpha()
 	poppy_shot = pygame.image.load(os.path.join("images", "poppy_shot.png")).convert_alpha()
 	wizard_shot = pygame.image.load(os.path.join("images", "wizard_shot.png")).convert_alpha()
@@ -245,7 +248,9 @@ class Game(object):
 	special_melon = pygame.image.load(os.path.join("images", "special_melon.png")).convert_alpha()
 	ninja_cat_rope = pygame.image.load(os.path.join("images", "ninja_cat_rope.png")).convert_alpha()
 	rope = pygame.image.load(os.path.join("images", "rope.png")).convert_alpha()
+	alien_shot = pygame.image.load(os.path.join("images", "alien_shot.png")).convert_alpha()
 	wheat = pygame.image.load(os.path.join("images", "wheat.png")).convert_alpha()
+	cd_orb = pygame.image.load(os.path.join("images", "cd_orb.png")).convert_alpha()
 	fire = pygame.image.load(os.path.join("images", "fire.png")).convert_alpha()
 	cage = pygame.image.load(os.path.join("images", "cage.png")).convert_alpha()
 	big_cage = pygame.image.load(os.path.join("images", "big_cage.png")).convert_alpha()
@@ -262,8 +267,13 @@ class Game(object):
 
 	# Fonts
 	main_font = pygame.font.Font("visitor1.ttf",50)
-	wave_font = pygame.font.Font("visitor1.ttf",35)
+	wave_font = pygame.font.Font("visitor1.ttf",15)
+	pop_up_font = pygame.font.Font("visitor1.ttf",35)
 	exclaimation = main_font.render("!",False,(0,0,0))
+
+	# Window Icon
+	pygame.display.set_icon(pygame.image.load("android-icon.png"))
+	pygame.display.set_caption("Bagels vs. Cats")
 
 	# Sprite Lists
 	allSprites = pygame.sprite.Group()
@@ -281,6 +291,7 @@ class Game(object):
 	explosionList = pygame.sprite.Group()
 	trailList = pygame.sprite.Group()
 	cannonList = pygame.sprite.Group()
+	alienBulletList = pygame.sprite.Group()
 
 	# hasBagel
 	page = 1
@@ -334,7 +345,7 @@ class Game(object):
 	catNumber = 1
 	preCatList = []
 	instances = 1
-	catTypes = ["cat","cat","cat","cat","cat","cat"]
+	catTypes = ["cat","cat","cat","cat","cat","cat","cat"]
 	ninja_cat_rope_list = []
 	rope_list = []
 	extinction = [0] # I hate this variable
@@ -345,7 +356,7 @@ class Game(object):
 	waveBar = 0
 
 	# Wheat
-	wheatCount = 5
+	wheatCount = 8
 	plainCost = 1
 	wheatCost = 2
 	poppyCost = 4
@@ -378,40 +389,60 @@ class Game(object):
 	selecting = False
 
 	def eventProcess(self):
-		print(self.flagelCapacity)
+		#print(self.flagelCapacity)
 		global particle_list, paused, pos
+
+		pos = pygame.mouse.get_pos()
+		if (pos[0] % 33 != 0) or (pos[1] % 33 != 0) or (pos[0] <= 0) or (pos[1] <= 0) or (pos[0] >= 780) or (pos[1] >= 400):
+			self.selecting = False
+			pygame.mouse.set_visible(True)
+
 		for event in pygame.event.get():
 			if (event.type == pygame.QUIT) or event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
 				pygame.quit()
 				sys.exit()
-				
+
 			if event.type == pygame.KEYDOWN and self.gameOver == False and self.titleOn == False:
 				pos = pygame.mouse.get_pos()
+
+				#print(pos[0],pos[1])
 				if event.key == pygame.K_p:
 					paused = not paused
 				if event.key == pygame.K_UP or event.key == pygame.K_w:
 					if not self.selecting:
+						pygame.mouse.set_pos([99,99])
 						self.selecting = True
-					pos = pygame.mouse.get_pos()
-					pygame.mouse.set_pos([pos[0],pos[1] - 66])
+					else:
+						pos = pygame.mouse.get_pos()
+						pygame.mouse.set_pos([pos[0],pos[1] - 66])
 				if event.key == pygame.K_DOWN or event.key == pygame.K_s:
 					if not self.selecting:
+						pygame.mouse.set_pos([99,99])
 						self.selecting = True
-					pos = pygame.mouse.get_pos()
-					pygame.mouse.set_pos([pos[0],pos[1] + 66])
+					else:
+						pos = pygame.mouse.get_pos()
+						pygame.mouse.set_pos([pos[0],pos[1] + 66])
 				if event.key == pygame.K_LEFT or event.key == pygame.K_a:
 					if not self.selecting:
+						pygame.mouse.set_pos([99,99])
 						self.selecting = True
-					pos = pygame.mouse.get_pos(9)
-					pygame.mouse.set_pos([pos[0] - 66,pos[1]])
+					else:
+						pos = pygame.mouse.get_pos()
+						pygame.mouse.set_pos([pos[0] - 66,pos[1]])
 				if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
 					if not self.selecting:
+						pygame.mouse.set_pos([99,99])
 						self.selecting = True
-					pos = pygame.mouse.get_pos()
-					pygame.mouse.set_pos([pos[0] + 66,pos[1]])
+					else:
+						pos = pygame.mouse.get_pos()
+						pygame.mouse.set_pos([pos[0] + 66,pos[1]])
 				if event.key == pygame.K_u:
 					self.selecting = False
 					pygame.mouse.set_visible(True)
+				if event.key == pygame.K_q:
+					for i in self.bagelList:
+						if i.bagelType == "toaster" and i.loaded == 1 and i.toastTimer == 0:
+							i.launchBagels(self.catList,self.cannonList,self.allSprites,self.toasted_mini)
 				if event.key == pygame.K_TAB:
 					if self.page == 1:
 						self.page = 2
@@ -422,15 +453,21 @@ class Game(object):
 					self.hasBagel = "null"
 				if event.key == pygame.K_SPACE:
 					for i in self.wheatList:
-						bullet_vec_x = i.rect.x - 145
-						bullet_vec_y = i.rect.y - 405
-						vec_length = math.sqrt(bullet_vec_x ** 2 + bullet_vec_y ** 2)
-						bullet_vec_x = (bullet_vec_x / vec_length) * 13
-						bullet_vec_y = (bullet_vec_y / vec_length) * 13
-						self.wheatMoveList.append([bullet_vec_x,bullet_vec_y,i.rect.x,i.rect.y])
-						i.kill()
-						i.remove()
-						self.wheatCount += 1
+						i.pressed += 1 # Pressed = logic for CDOrb
+						if i.pressed >= 10:
+							bullet_vec_x = i.rect.x - 145
+							bullet_vec_y = i.rect.y - 405
+							vec_length = math.sqrt(bullet_vec_x ** 2 + bullet_vec_y ** 2)
+							bullet_vec_x = (bullet_vec_x / vec_length) * 13
+							bullet_vec_y = (bullet_vec_y / vec_length) * 13
+							self.wheatMoveList.append([bullet_vec_x,bullet_vec_y,i.rect.x,i.rect.y,i.objectType])
+							i.kill()
+							i.remove()
+							if i.objectType == "wheat":
+								self.wheatCount += 1
+							elif i.objectType == "cdorb":
+								self.reduceCooldowns()
+
 				"""if event.key == pygame.K_BACKQUOTE:
 					for i in self.bagelList:
 						if i.rect.collidepoint(pos[0],pos[1]):
@@ -518,10 +555,26 @@ class Game(object):
 								self.hasBagel = "null"
 							elif i.rect.collidepoint(pos[0],pos[1]) and (i.bagelType != "wizard" or i.level >= 3):
 								self.clicked = False
+						if i.rect.collidepoint(pos[0],pos[1]) and i.bagelType == "toaster":
+							if event.key == pygame.K_1 and self.miniRecharge == False and self.hasBagel != "mini" and (self.wheatCount >= self.miniCost):
+								if i.loaded == 1 and i.toastTimer == 0:
+									i.launchBagels(self.catList,self.cannonList,self.allSprites,self.toasted_mini)
+									if i.targetCat > 0:
+										i.loaded = 1
+										i.toastTimer = 300
+										self.wheatCount -= self.miniCost
+										self.miniRecharge = True
+										self.hasBagel = "null"
+								if i.loaded == 0:
+									i.loaded = 1
+									self.wheatCount -= self.miniCost
+									self.miniRecharge = True
+									self.hasBagel = "null"
+
 						if i.rect.collidepoint(pos[0],pos[1]):
 							if event.key == pygame.K_6:
 								if i.bagelType != "cow" and self.milk >= 20: # probably not necessary but hey
-									i.cheeseItUp = 400
+									i.cheeseItUp = 750
 									self.milk -= 20
 									self.hasBagel = "null"
 							if event.key == pygame.K_BACKQUOTE:
@@ -671,15 +724,20 @@ class Game(object):
 
 					for i in self.wheatList:
 						if i.rect.collidepoint(pos[0],pos[1]):
-							bullet_vec_x = i.rect.x - 145
-							bullet_vec_y = i.rect.y - 405
-							vec_length = math.sqrt(bullet_vec_x ** 2 + bullet_vec_y ** 2)
-							bullet_vec_x = (bullet_vec_x / vec_length) * 13
-							bullet_vec_y = (bullet_vec_y / vec_length) * 13
-							self.wheatMoveList.append([bullet_vec_x,bullet_vec_y,i.rect.x,i.rect.y])
-							i.kill()
-							i.remove()
-							self.wheatCount += 1
+							i.pressed += 1 # Pressed = logic for CDOrb
+							if i.pressed >= 10:
+								bullet_vec_x = i.rect.x - 145
+								bullet_vec_y = i.rect.y - 405
+								vec_length = math.sqrt(bullet_vec_x ** 2 + bullet_vec_y ** 2)
+								bullet_vec_x = (bullet_vec_x / vec_length) * 13
+								bullet_vec_y = (bullet_vec_y / vec_length) * 13
+								self.wheatMoveList.append([bullet_vec_x,bullet_vec_y,i.rect.x,i.rect.y,i.objectType])
+								i.kill()
+								i.remove()
+								if i.objectType == "wheat":
+									self.wheatCount += 1
+								elif i.objectType == "cdorb":
+									self.reduceCooldowns()
 
 					# ... then fork collisions
 
@@ -716,7 +774,7 @@ class Game(object):
 						for i in self.bagelList:
 							if i.rect.collidepoint(pos[0],pos[1]):
 								if i.bagelType != "cow" and self.milk >= 20: # probably not necessary but hey
-									i.cheeseItUp = 400
+									i.cheeseItUp = 750
 									self.milk -= 20
 									self.hasBagel = "null" 
 
@@ -768,10 +826,10 @@ class Game(object):
 					cat.add(self.allSprites)"""
 					# Savin' them sound values on resume
 					with open('save.dat','wb') as fp:
-						pickle.dump(self.music_slider_value,fp)
-						pickle.dump(self.sound_slider_value,fp)
-						pickle.dump(self.musicOff,fp)
-						pickle.dump(self.soundOff,fp)
+						pickle.dump(self.music_slider_value,fp, protocol=2)
+						pickle.dump(self.sound_slider_value,fp, protocol=2)
+						pickle.dump(self.musicOff,fp, protocol=2)
+						pickle.dump(self.soundOff,fp, protocol=2)
 				elif self.quit_button.collidepoint(pos[0],pos[1]) and self.options == False and self.info == False:
 					self.titleOn = True
 					self.restartGame()
@@ -833,7 +891,8 @@ class Game(object):
 	def drawBackground(self):
 		if self.titleOn == False:
 			wheat_amount = self.main_font.render(str(self.wheatCount),False,(0,0,0))
-			wave_count = self.wave_font.render("Wave " + str(self.wave),False,(0,0,0))
+			wave_count = self.wave_font.render(str(self.wave),False,(0,0,0))
+			next_wave_count = self.wave_font.render(str(self.wave + 1),False,(0,0,0))
 			"""wave_count.unlock()
 			wave_count.set_alpha(180)"""
 			text_width = wheat_amount.get_width()
@@ -846,13 +905,10 @@ class Game(object):
 			for row in range(6):
 				for column in range(11):
 					screen.blit(self.tile,(column*66 + 132,row*66))
-			for i in self.bagelList:
-				if i.cheeseItUp > 0:
-					screen.blit(self.cream_cheese_tile,(i.storedx,i.storedy))
 			if self.selecting == True:
 				pygame.mouse.set_visible(False)
-			if self.displayWave == 0:
-				screen.blit(wave_count,(665,10))
+			# if self.displayWave == 0:
+			# 	screen.blit(wave_count,(665,10))
 
 			screen.blit(self.arrows,(748,412))
 
@@ -1061,12 +1117,19 @@ class Game(object):
 			if self.hasBagel == "creamcheese":
 				screen.blit(self.cream_cheese_selected,(140,400))
 
-			for i in self.emptyBList: # A bit out of place but that's OK
-				if i.bagelSelected == True:
-					screen.blit(self.selector,(i.rect.x,i.rect.y))
+			if self.selecting:
+				for i in self.emptyBList: # A bit out of place but that's OK
+					if i.bagelSelected == True:
+						screen.blit(self.selector,(i.rect.x,i.rect.y))
+						#pygame.mouse.set_pos(i.rect.x + 33,i.rect.y + 33)
+				for i in self.bagelList:
+					if i.bagelSelected == True:
+						screen.blit(self.selector,(i.storedx,i.storedy))
+						#pygame.mouse.set_pos(i.storedx + 33,i.storedy + 33)
+
 			for i in self.bagelList:
-				if i.bagelSelected == True:
-					screen.blit(self.selector,(i.storedx,i.storedy))
+				if i.cheeseItUp > 0:
+					screen.blit(self.cream_cheese_tile,(i.storedx,i.storedy))
 
 			screen.blit(wheat_amount,(178 - (text_width/2),435 - (text_height/2)))
 			if self.lightBox > 0:
@@ -1081,7 +1144,10 @@ class Game(object):
 			self.wavePercent = self.waveTime / 3600
 			self.wavePercentRaw = 800 * self.wavePercent
 			self.waveBar = round(self.wavePercentRaw)
-			pygame.draw.rect(screen,(255,0,0),(0,470,self.waveBar,10))
+			pygame.draw.rect(screen,(234,43,43),(0,470,self.waveBar,10))
+
+			screen.blit(wave_count,(5,468))
+			screen.blit(next_wave_count,(780,468))
 			#screen.blit(self.tile, (0,0))
 
 	def drawSprites(self):
@@ -1097,6 +1163,7 @@ class Game(object):
 		self.cannonList.draw(screen)
 		self.dogList.draw(screen)
 		self.catBulletList.draw(screen)
+		self.alienBulletList.draw(screen)
 		for i in self.cageList:
 			if i.dogInside == True:
 				screen.blit(self.dog,(i.rect.x + 11,i.rect.y + 8))
@@ -1184,6 +1251,7 @@ class Game(object):
 		self.bagelList.update()
 		self.dogList.update(paused)
 		self.catBulletList.update(paused)
+		self.alienBulletList.update(paused,self.wheatList,self.allSprites,self.cd_orb)
 		self.wheatList.update(paused)
 		self.bulletList.update(paused)
 		self.cageList.update(paused,self.big_cage,self.dog,self.dog_eating,self.dogList)
@@ -1191,7 +1259,7 @@ class Game(object):
 		self.ghostBagelList.update()
 		self.explosionList.update()
 		self.trailList.update()
-		self.cannonList.update()
+		self.cannonList.update(paused)
 
 
 		for i in self.cageList:
@@ -1318,6 +1386,9 @@ class Game(object):
 			if i.catType == "pizza_cat":
 				i.eatEmCat(self.bagelList,self.emptyBList)
 				i.rainPizzas(self.pizza,self.allSprites,self.ghostBagelList,self.pizza_cat_ns,self.pizza_cat_eating_ns)
+			if i.catType == "alien_cat":
+				i.eatEmCat(self.bagelList,self.emptyBList)
+				i.alienFire(self.bagelList,self.alien_shot,self.alienBulletList,self.allSprites)
 			i.onDeath(self.wheat,self.wheatList,self.allSprites)
 			if i.targeted == True:
 				pygame.draw.rect(screen,(232,221,29),(i.rect.x + 15, i.rect.y + 50,40,5))
@@ -1346,7 +1417,12 @@ class Game(object):
 			if paused == False: 
 				i[2] += -(i[0]) # See eventProcess
 				i[3] += -(i[1])
-				screen.blit(self.wheat,(i[2],i[3]))
+
+				if i[4] == "wheat": 
+					screen.blit(self.wheat,(i[2],i[3]))
+				elif i[4] == "cdorb":
+					screen.blit(self.cd_orb,(i[2],i[3]))
+
 				wheatCollision = pygame.Rect(i[2],i[3],50,50)
 				if self.wheatmilk_box.colliderect(wheatCollision):
 					self.wheatMoveList.remove(i)
@@ -1354,9 +1430,18 @@ class Game(object):
 
 		self.wheatList.draw(screen)
 
+		for i in self.ghostBagelList:
+			i.rot_center()
+
+		for i in self.alienBulletList:
+			if i.dy == -7:
+				particle_list = self.create_particles(particle_list, (i.rect.x + 5,i.rect.y + 45), (98,0,15), 1, 32, "quick")
+			elif i.dy == 15:
+				particle_list = self.create_particles(particle_list, (i.rect.x + 5,i.rect.y), (98,0,15), 1, 32, "quick")
+
 		# And above all else...
 		if 0 < self.displayWave <= 200 and not self.titleOn and (paused == False and self.gameOver == False):
-			wave_count = self.wave_font.render("Wave " + str(self.wave),False,(0,0,0))
+			wave_count = self.pop_up_font.render("Wave " + str(self.wave),False,(0,0,0))
 			if self.wave < 10:
 				grayRect = pygame.Surface((132,40)) #140
 			else:
@@ -1366,9 +1451,6 @@ class Game(object):
 			screen.blit(grayRect,(332,195))
 			screen.blit(wave_count,(340,200))
 			self.displayWave -= 1
-
-		for i in self.ghostBagelList:
-			i.rot_center()
 
 
 	def drawHand(self):
@@ -1541,9 +1623,6 @@ class Game(object):
 			screen.blit(explodeFill,(0,0))
 			self.extinction[0] -= 1
 
-	#def drawCC(self):
-
-
 	def spawnCats(self):
 		"""self.spawnTime += 1
 		self.waveTime += 1
@@ -1563,7 +1642,7 @@ class Game(object):
 
 		if self.preGame == True and (paused == False and self.gameOver == False):
 			self.preGameTime += 1
-			if self.preGameTime >= 1: #900?
+			if self.preGameTime > 1:#900?
 				self.preGame = False
 				for i in range(self.instances):
 					spawnValue = random.randint(0,900)
@@ -1638,8 +1717,8 @@ class Game(object):
 						if self.exclaim == True:
 							self.drawDanger = position
 							self.exclaim = False
-						cat.shield = 40
-						cat.totalShield = 40
+						cat.shield = 80
+						cat.totalShield = 80
 						cat.storedY = position
 						cat.add(self.catList)
 						cat.add(self.bagelCatList)
@@ -1658,6 +1737,16 @@ class Game(object):
 						trail = Trail(1100,position,self.catNumber,cat)
 						trail.add(self.trailList)
 						trail.add(self.allSprites)
+					elif catType == "alien_cat":
+						position = random.randrange(11,394,66)
+						cat = Cat("alien_cat",50,900,position,self.alien_cat,self.alien_cat_eating,self.catNumber)
+						if self.exclaim == True:
+							self.drawDanger = position
+							self.exclaim = False
+						cat.storedY = position
+						cat.add(self.catList)
+						cat.add(self.bagelCatList)
+						cat.add(self.allSprites)
 					self.catNumber += 1
 				if self.spawnTime >= 900:
 					self.spawnTime = 0
@@ -1669,42 +1758,50 @@ class Game(object):
 				self.instances += 1
 				self.waveTime = 0
 				self.wave += 1
+				print(str(self.wave) + "\n")
 				self.displayWave = 200
-				if self.wave >= 2:
-					self.catTypes.append("cat")
-					self.catTypes.append("cat")
-					self.catTypes.append("taco_cat")
-				if self.wave >= 3:
-					self.catTypes.append("ninja_cat")
+				if self.wave == 2:
 					self.catTypes.append("baby_cat")
-				if self.wave >= 4:
+				if self.wave == 3:
+					self.instances += 1
 					self.catTypes.append("taco_cat")
-					self.catTypes.append("fondue_cat")
-					self.catTypes.append("fondue_cat")
-					self.catTypes.append("melon_cat")
-					self.catTypes.append("melon_cat")
-				if self.wave >= 5:
-					self.catTypes.append("weenie_cat")
-					self.catTypes.append("weenie_cat")
-					self.catTypes.append("melon_cat")
-					self.catTypes.append("fondue_cat")
 					self.catTypes.append("ninja_cat")
-				if self.wave >= 7:
-					self.catTypes.append("pizza_cat")
+				if self.wave == 4:
+					self.instances += 1
+					self.catTypes.append("taco_cat")
+					self.catTypes.append("melon_cat")
+				if self.wave == 5:
+					self.instances += 1
+					self.catTypes.append("weenie_cat")
+					self.catTypes.append("melon_cat")
+				if self.wave == 6:
+					self.instances += 2
 					self.catTypes.append("fondue_cat")
-				if self.wave >= 8:
+					self.catTypes.append("alien_cat")
+				if self.wave == 7:
+					self.instances += 3
+					self.catTypes.append("ninja_cat")
+					self.catTypes.append("weenie_cat")
+				if self.wave == 8:
+					self.instances += 3
 					self.catTypes.append("pizza_cat")
+				if 8 < self.wave < 11:
 					self.catTypes.append("pizza_cat")
-					self.catTypes.append("fondue_cat")
-				if self.wave >= 10:
+					self.instances += 2
+				if self.wave > 11:
+					self.instances += 2
 					self.catTypes.append("pizza_cat")
-					self.catTypes.append("pizza_cat")
-					self.catTypes.append("pizza_cat")
-					self.catTypes.append("fondue_cat")
+					self.catTypes.append("alien_cat")
 
 	def spawnBagels(self):
 		global particle_list
 		bagelID = 0
+		# for i in range(100):
+		# 	self.reduceCooldowns()
+		# for i in range(6):
+		# 	for j in range(5):
+		# 		bigDog = Dog(0 + (j * 66),11 + (66 * i),self.dog,self.dog_eating)
+		# 		bigDog.add(self.dogList)
 		for row in range(6):
 			for column in range(12):
 				bagel = Bagel((column*66),(row*66))
@@ -1762,7 +1859,7 @@ class Game(object):
 							else:
 								k.health -= i.damage
 							if i.level >= 2 and k.caged == False:
-								k.rect.x += 50
+								k.rect.x += 100
 								k.move = True
 								k.eat = False
 								k.victim = None
@@ -1852,8 +1949,7 @@ class Game(object):
 							j.remove()
 						else:
 							q.health -= 1
-
-					
+			
 	def catProjectileCollision(self):
 		global particle_list
 		for i in self.catBulletList:
@@ -1920,8 +2016,7 @@ class Game(object):
 										k.health -= 20
 							i.remove()
 							i.kill()
-
-			
+		
 	def eatBagels(self):
 		for i in self.bagelList:
 			if pygame.sprite.spritecollide(i, self.catList, False, pygame.sprite.collide_mask) and paused == False:
@@ -1943,7 +2038,6 @@ class Game(object):
 				for w in self.catList:
 					if pygame.sprite.collide_mask(w, q):
 						w.victim = q
-
 
 	def cageCats(self):
 		global particle_list
@@ -2006,45 +2100,48 @@ class Game(object):
 	def createHealthBars(self):
 		for i in self.catList:
 			healthPercent = i.health / i.totalHealth
-			health = round(40 * healthPercent)
+			health = round(30 * healthPercent)
 			# Not every cat has a shield
 			# Not every integer can be divided by 0
 			if i.shield != None:
 				shieldPercent = i.shield / i.totalShield
-				shield = round(40 * shieldPercent)
+				shield = math.floor(30 * shieldPercent)
 			# Not every teacher is as good as Gino
 			#BringGinoToIB
-			if i.catType == "cat" or i.catType == "taco_cat" or i.catType == "melon_cat" or i.catType == "ninja_cat" or i.catType == "fondue_cat":
-				pygame.draw.rect(screen,(255,0,0),(i.rect.x + 73,i.rect.y + 46,3,-40))
-				pygame.draw.rect(screen,(0,0,255),(i.rect.x + 73,i.rect.y + 46,3, -health))
+			if i.catType == "cat" or i.catType == "taco_cat" or i.catType == "melon_cat" or i.catType == "ninja_cat" or i.catType == "fondue_cat" or i.catType == "alien_cat":
+				pygame.draw.rect(screen,(234,43,43),(i.rect.x + 19,i.rect.y + 42,30,3))
+				pygame.draw.rect(screen,(0,0,255),(i.rect.x + 19,i.rect.y + 42,health,3))
 			elif i.catType == "weenie_cat":
-				pygame.draw.rect(screen,(255,0,0),(i.rect.x + 111,i.rect.y + 46,3,-40))
-				pygame.draw.rect(screen,(0,0,255),(i.rect.x + 111,i.rect.y + 46,3, -health))
+				pygame.draw.rect(screen,(234,43,43),(i.rect.x + 19,i.rect.y + 42,30,3))
+				pygame.draw.rect(screen,(0,0,255),(i.rect.x + 19,i.rect.y + 42,health,3))
 			elif i.catType == "baby_cat":
-				pygame.draw.rect(screen,(255,0,0),(i.rect.x + 46,i.rect.y + 23,3,-40 / 2))
-				pygame.draw.rect(screen,(0,0,255),(i.rect.x + 46,i.rect.y + 23,3, -health / 2))
+				pygame.draw.rect(screen,(255,0,0),(i.rect.x + 12,i.rect.y + 23,30 / 2, 2))
+				pygame.draw.rect(screen,(0,0,255),(i.rect.x + 12,i.rect.y + 23,health / 2, 2))
 			elif i.catType == "pizza_cat" and i.pizzaDown == False:
-				pygame.draw.rect(screen,(255,0,0),(i.rect.x + 84,i.rect.y + 49,3,-40))
-				pygame.draw.rect(screen,(0,0,255),(i.rect.x + 84,i.rect.y + 49,3, -health))
-				pygame.draw.rect(screen,(77,77,77),(i.rect.x + 84,i.rect.y + 49,3, -shield))
+				pygame.draw.rect(screen,(234,43,43),(i.rect.x + 32,i.rect.y + 49,30,3))
+				pygame.draw.rect(screen,(0,0,255),(i.rect.x + 32,i.rect.y + 49,health,3))
+				pygame.draw.rect(screen,(77,77,77),(i.rect.x + 32,i.rect.y + 49,shield,3))
+
+				# pygame.draw.rect(screen,(255,0,0),(i.rect.x + 84,i.rect.y + 49,3,-40))
+				# pygame.draw.rect(screen,(0,0,255),(i.rect.x + 84,i.rect.y + 49,3, -health))
+				# pygame.draw.rect(screen,(77,77,77),(i.rect.x + 84,i.rect.y + 49,3, -shield))
 			elif i.catType == "pizza_cat" and i.pizzaDown == True:
-				pygame.draw.rect(screen,(255,0,0),(i.rect.x + 73,i.rect.y + 49,3,-40))
-				pygame.draw.rect(screen,(0,0,255),(i.rect.x + 73,i.rect.y + 49,3, -health))
-				pygame.draw.rect(screen,(77,77,77),(i.rect.x + 73,i.rect.y + 49,3, -shield))
+				pygame.draw.rect(screen,(234,43,43),(i.rect.x + 21,i.rect.y + 49,30,3))
+				pygame.draw.rect(screen,(0,0,255),(i.rect.x + 21,i.rect.y + 49,health,3))
+				pygame.draw.rect(screen,(77,77,77),(i.rect.x + 21,i.rect.y + 49,shield,3))
 
 		for i in self.bagelList:
 			if i.bagelType != "flagel":
 				healthPercent = i.health / i.totalHealth
 				health = round(30 * healthPercent)
-				pygame.draw.rect(screen,(255,0,0),(i.storedx + 18,i.storedy + 66,30,3))
+				pygame.draw.rect(screen,(234,43,43),(i.storedx + 18,i.storedy + 66,30,3))
 				pygame.draw.rect(screen,(0,0,255),(i.storedx + 18,i.storedy + 66,health,3))
 
 		for k in self.dogList:
 			healthPercent = k.health / k.totalHealth
 			health = round(30 * healthPercent)
-			pygame.draw.rect(screen,(255,0,0),(k.rect.x - 12,k.rect.y + 43,3,-40))
-			pygame.draw.rect(screen,(0,0,255),(k.rect.x - 12,k.rect.y + 43,3,-health))
-
+			pygame.draw.rect(screen,(234,43,43),(k.rect.x + 25, k.rect.y + 39, 30,3))
+			pygame.draw.rect(screen,(0,0,255),(k.rect.x + 25, k.rect.y + 39, health,3))
 
 	def pause(self):
 		global paused
@@ -2071,7 +2168,6 @@ class Game(object):
 				android.wait_for_resume()
 				paused = True
 
-
 	def restartGame(self):
 		global paused, particle_list
 		self.bagelList.empty()
@@ -2090,6 +2186,7 @@ class Game(object):
 		self.allSprites.empty()
 		self.bagelCatList.empty()
 		self.cageList.empty()
+		self.alienBulletList.empty()
 		self.wheatMoveList = []
 		self.rope_list = []
 		self.ninja_cat_rope_list = []
@@ -2124,7 +2221,7 @@ class Game(object):
 		self.displayWave = 200
 		self.preCatList = []
 		self.instances = 1
-		self.catTypes = ["cat","cat","cat","cat","cat","cat"]
+		self.catTypes = ["cat","cat","cat","cat","cat","cat","cat"]
 		self.exclaim = True
 		self.drawDanger = 0
 		self.dangerTimer = 0
@@ -2133,7 +2230,7 @@ class Game(object):
 		self.wavePercentRaw = 0
 		self.wavePercent = 0
 		self.waveBar = 0
-		self.wheatCount = 5
+		self.wheatCount = 8
 		self.milk = 0
 		self.extinction = [0]
 		self.restart = False
@@ -2384,22 +2481,62 @@ class Game(object):
 				if i.victim.bagelType == "plain" or i.victim.bagelType == "poppy" or i.victim.bagelType == "sesame" or i.victim.bagelType == "wizard" or i.victim.bagelType == "cow" or i.victim.bagelType == "everything" or i.victim.bagelType == "crais":
 					if i.catType == "baby_cat":
 						particle_list = self.create_particles(particle_list, (i.rect.x + 18,i.rect.y + 10), (229,218,165), 1, 26, None) # All heights down by 2
+					elif i.catType == "pizza_cat":
+						particle_list = self.create_particles(particle_list, (i.rect.x + 23,i.rect.y + 21), (229,218,165), 1, 32, None)
 					else:
 						particle_list = self.create_particles(particle_list, (i.rect.x + 23,i.rect.y + 15), (229,218,165), 1, 32, None)
 				elif i.victim.bagelType == "wheat" or i.victim.bagelType == "crais":
 					if i.catType == "baby_cat":
 						particle_list = self.create_particles(particle_list, (i.rect.x + 18,i.rect.y + 8), (156,111,40), 1, 26, None)
+					elif i.catType == "pizza_cat":
+						particle_list = self.create_particles(particle_list, (i.rect.x + 23,i.rect.y + 21), (156,111,40), 1, 32, None)
 					else:
 						particle_list = self.create_particles(particle_list, (i.rect.x + 23,i.rect.y + 15), (156,111,40), 1, 32, None)
 				elif i.victim.bagelType == "multi":
 					if i.catType == "baby_cat":
 						particle_list = self.create_particles(particle_list, (i.rect.x + 18,i.rect.y + 8), (172,102,45), 1, 26, None)
+					elif i.catType == "pizza_cat":
+						particle_list = self.create_particles(particle_list, (i.rect.x + 23,i.rect.y + 21), (172,102,45), 1, 32, None)
 					else:
 						particle_list = self.create_particles(particle_list, (i.rect.x + 23,i.rect.y + 15), (172,102,45), 1, 32, None)
 
 				# a fish
 
+	def reduceCooldowns(self):
+		self.plainCapacity -= math.ceil(200 * 0.03)
+		self.wheatCapacity -= math.ceil(425 * 0.03)
+		self.poppyCapacity -= math.ceil(425 * 0.03)
+		self.sesameCapacity -= math.ceil(600 * 0.03)
+		self.wizardCapacity -= math.ceil(375 * 0.03)
+		self.cowCapacity -= math.ceil(600 * 0.03)
+		self.everyCapacity -= math.ceil(425 * 0.03)
+		self.craisCapacity -= math.ceil(600 * 0.03)
+		self.multiCapacity -= math.ceil(600 * 0.03)
+		self.flagelCapacity -= math.ceil(900 * 0.03)
+		self.miniCapacity -= math.ceil(30 * 0.03)
+		self.toasterCapacity -= math.ceil(750 * 0.03)
 
-
-
-
+		if self.plainCapacity < 30:
+			self.plainCapacity = 30
+		if self.wheatCapacity < 30:
+			self.wheatCapacity = 30
+		if self.poppyCapacity < 30:
+			self.poppyCapacity = 30
+		if self.sesameCapacity < 30:
+			self.sesameCapacity = 30
+		if self.wizardCapacity < 30:
+			self.wizardCapacity = 30
+		if self.cowCapacity < 30:
+			self.cowCapacity = 30
+		if self.everyCapacity < 30:
+			self.everyCapacity = 30
+		if self.craisCapacity < 30:
+			self.craisCapacity = 30
+		if self.multiCapacity < 30:
+			self.multiCapacity = 30
+		if self.flagelCapacity < 30:
+			self.flagelCapacity = 30
+		if self.miniCapacity < 30:
+			self.miniCapacity = 30
+		if self.toasterCapacity < 30:
+			self.toasterCapacity = 3
